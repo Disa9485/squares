@@ -273,7 +273,7 @@ void generateNoiseHeightMap(std::vector<float>& data) {
 }
 
 // Global variables
-int riverCount = (mapWidth * mapHeight) / 5000;
+int riverCount = (mapWidth * mapHeight) / 20000;
 float maxRiverSpawnHeight = 0.75f; // Default: 0.85
 float minRiverSpawnHeight = 0.6f; // Default: 0.7
 float minRiverDespawnHeight = 0.30f; // Default: 0.30
@@ -679,39 +679,30 @@ void generateRiversInHeightMap(std::vector<float>& heightMap) {
     std::uniform_int_distribution<> distr(0, mapWidth * mapHeight - 1);
     std::vector<RiverPath> rivers(riverCount);
     initializeRivers(rivers, heightMap, gen, distr);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Creating river paths..." << std::endl;
     createRiverPaths(rivers, heightMap);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Generating random points along paths..." << std::endl;
     generateRandomPoints(rivers, gen);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Redrawing paths along B-spline curves..." << std::endl;
     redrawPaths(rivers);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Removing loops and duplicate points in rivers..." << std::endl;
     removeLoopsAndDuplicates(rivers);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Removing straight rivers..." << std::endl;
     removeStraightRivers(rivers);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Combining rivers that intersect..." << std::endl;
     combineIntersectingRivers(rivers);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Removing short rivers..." << std::endl;
     checkRiverLength(rivers);
-    std::cout << rivers.size() << std::endl;
 
     std::cout << "Carving heightmap..." << std::endl;
     carveRivers(rivers, heightMap);
-    std::cout << rivers.size() << std::endl;
 }
 
 // Erode heightmap parameters
