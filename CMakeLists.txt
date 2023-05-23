@@ -22,9 +22,11 @@ file(COPY ${TGUI_DLL} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Source files to be used in the project
 set(SOURCE_FILES
-        src/game.cpp
-        src/coordinateEntity.cpp
-        src/coordinateEntity.hpp
+        src/Game.cpp
+        src/CoordinateEntity.cpp
+        src/CoordinateEntity.hpp
+        src/MapGenerator.cpp
+        src/MapGenerator.h
         # Add additional source files here
         )
 

@@ -1,169 +1,3 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/System/Clock.hpp>
-#include <SFML/Window/Event.hpp>
-#include <TGUI/TGUI.hpp>
-#include <nlohmann/json.hpp>
-#include <fstream>
-#include <iostream>
-//
-//using json = nlohmann::json;
-//
-//enum class GameState {
-//    MENU,
-//    PLAY,
-//    LOAD,
-//    SETTINGS,
-//    ERROR
-//};
-//
-//// Default config values
-//json default_config = {
-//        {"resolution_option", 0},
-//        {"fullscreen", false},
-//        {"fps", 60},
-//};
-//
-//// Resolution options
-//std::vector<sf::Vector2u> RESOLUTION_OPTIONS = {
-//        sf::Vector2u(1280, 720),
-//        sf::Vector2u(1600, 900),
-//        sf::Vector2u(1920, 1080),
-//        sf::Vector2u(2560, 1440),
-//        sf::Vector2u(3840, 2160)
-//};
-//
-//// The current game state
-//GameState current_state = GameState::MENU;
-//std::string message;
-//
-//// Font
-//sf::Font PIXEL_FONT;
-//
-//// Colors
-//sf::Color BACKGROUND_COLOR(87, 135, 207);
-//sf::Color BUTTON_COLOR(60, 129, 207);
-//sf::Color TEXT_COLOR(197, 209, 237);
-//
-//// Load the configuration from the config.json file
-//json load_config() {
-//    std::ifstream configFile("config.json");
-//    if (!configFile) {
-//        std::cout << "ERROR: Config does not exist, using defaults." << std::endl;
-//        return nullptr;
-//    }
-//
-//    json new_config;
-//    configFile >> new_config;
-//    return new_config;
-//}
-//
-//// Save the configuration to the config.json file
-//void save_config(const json& new_config) {
-//    std::ofstream configFile("config.json");
-//    configFile << new_config.dump(4);
-//}
-//
-//void menu(sf::RenderWindow& window, tgui::GuiSFML& gui) {
-//    message = "Created by Collin Miller";
-//    //auto message_time = clock.getElapsedTime().asMilliseconds() + 5000;
-//
-//    // Instead of creating Rectangles, we create buttons directly
-//    auto new_game_button = tgui::Button::create();
-//    new_game_button->setSize({"50%", "12.5%"});
-//    new_game_button->setPosition({"25%", "25%"});
-//    new_game_button->setText("New Game"); // Set the text of the button
-//    new_game_button->onPress([](){ current_state = GameState::PLAY; message = ""; });
-//    gui.add(new_game_button);
-//
-//    auto load_game_button = tgui::Button::create();
-//    load_game_button->setSize({"50%", "12.5%"});
-//    load_game_button->setPosition({"25%", "40%"});
-//    load_game_button->setText("Load Game");
-//    load_game_button->onPress([](){ current_state = GameState::LOAD; message = ""; });
-//    gui.add(load_game_button);
-//
-//    auto settings_button = tgui::Button::create();
-//    settings_button->setSize({"50%", "12.5%"});
-//    settings_button->setPosition({"25%", "55%"});
-//    settings_button->setText("Settings");
-//    settings_button->onPress([](){ current_state = GameState::SETTINGS; message = ""; });
-//    gui.add(settings_button);
-//
-//    auto exit_button = tgui::Button::create();
-//    exit_button->setSize({"50%", "12.5%"});
-//    exit_button->setPosition({"25%", "70%"});
-//    exit_button->setText("Exit");
-//    exit_button->setTextSize(48);
-//    exit_button->onPress([&](){ window.close(); });
-//    gui.add(exit_button);
-//
-//    // Handle events
-//    sf::Event event;
-//    while (window.pollEvent(event)) {
-//        if (event.type == sf::Event::Closed)
-//            window.close();
-//
-//        gui.handleEvent(event);
-//    }
-//
-//    window.clear();
-//    gui.draw();
-//    window.display();
-//}
-//
-//int main() {
-//
-//    // Load the configuration from the config.json file
-//    std::ifstream configFile("config.json");
-//    json config = load_config();
-//    if (config.is_null()) { // Use default values
-//        config = default_config;
-//        save_config(default_config);
-//    }
-//
-//    sf::RenderWindow window;
-//    if (config["fullscreen"].get<bool>()) {
-//        window.create(sf::VideoMode::getDesktopMode(), "Squares", sf::Style::Fullscreen);
-//    } else {
-//        window.create(sf::VideoMode::getDesktopMode(), "Squares", sf::Style::Default);
-//    }
-//
-//    tgui::GuiSFML gui(window);
-//    sf::Clock clock;
-//
-//    while (window.isOpen()) {
-//        sf::Event event;
-//        while (window.pollEvent(event)) {
-//            if (event.type == sf::Event::Closed) {
-//                window.close();
-//            }
-//        }
-//
-//        switch (current_state) {
-//            case GameState::MENU:
-//                menu(window, gui);
-//                break;
-//            case GameState::PLAY:
-//                //play();
-//                break;
-//            case GameState::LOAD:
-//                //load();
-//                break;
-//            case GameState::SETTINGS:
-//                //settings();
-//                break;
-//            case GameState::ERROR:
-//                //error();
-//                break;
-//        }
-//
-//        // Cap the framerate
-//        sf::sleep(sf::seconds(1.f / config["fps"].get<int8_t>()));
-//    }
-//
-//    return 0;
-//}
-
 // Imports
 #include <iostream>
 #include <vector>
@@ -176,26 +10,21 @@
 #include <cmath>
 #include <algorithm>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 #include <future>
 #include <set>
 #include <unordered_map>
+#include "MapGenerator.h"
 
-// Map dimensions
-const int mapWidth = 1000;
-const int mapHeight = 1000;
-const int channels = 3;  // RGB channels
-
-// Generate noise heightmap parameters
-const float frequency = 0.25; // Smaller = larger lands, bigger = smaller lands
-const int octaves = 12;
-const float lacunarity = 2.0f;
-const float persistence = 0.5f;
-const float distanceFromCenter = 0.8f;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  GENERATE PERLIN NOISE HEIGHTMAP
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Generate noise heightmap function
-void generateNoiseHeightMap(std::vector<float>& data) {
+std::vector<float> generateNoiseHeightMap(MapConfig mapConfig) {
+    // Create height map
+    std::vector<float> heightMap(mapConfig.mapWidth * mapConfig.mapHeight);
+
     // Indicate start
     std::cout << "Generating Simplex Noise Height Map..." << std::endl;
     std::atomic<int> pixelsProcessed(0);
@@ -209,8 +38,8 @@ void generateNoiseHeightMap(std::vector<float>& data) {
     std::vector<std::thread> threads(numThreads);
 
     // Calculate center of the image
-    float centerX = mapWidth / 2.0f;
-    float centerY = mapHeight / 2.0f;
+    float centerX = mapConfig.mapWidth / 2.0f;
+    float centerY = mapConfig.mapHeight / 2.0f;
 
     // Initialize Simplex noise generator
     FastNoiseLite noiseGenerator;
@@ -220,33 +49,33 @@ void generateNoiseHeightMap(std::vector<float>& data) {
     // Generate noise height map thread
     auto generateNoiseHeightMapPixels = [&](int startY, int endY) {
         for (int y = startY; y < endY; ++y) {
-            for (int x = 0; x < mapWidth; ++x) {
+            for (int x = 0; x < mapConfig.mapWidth; ++x) {
                 float noise = 0.0f;
                 float amplitude = 1.0f;
                 float maxAmplitude = 0.0f;
-                float freq = frequency;
+                float freq = mapConfig.frequency;
 
-                for (int i = 0; i < octaves; ++i) {
+                for (int i = 0; i < mapConfig.octaves; ++i) {
                     noise += amplitude * noiseGenerator.GetNoise((float)x * freq, (float)y * freq);
                     maxAmplitude += amplitude;
-                    amplitude *= persistence;
-                    freq *= lacunarity;
+                    amplitude *= mapConfig.persistence;
+                    freq *= mapConfig.lacunarity;
                 }
 
                 noise /= maxAmplitude;
                 noise = (noise + 1) / 2.0f;  // map noise from 0.0 - 1.0
 
-                float dx = centerX - x;
-                float dy = centerY - y;
-                float distance = std::sqrt(dx * dx + dy * dy) / (((mapWidth + mapHeight) / 2) / 2.0f);
-                distance = 1 / (1 + std::exp(-10 * (distance - distanceFromCenter)));
+                float dx = 2.0f * (centerX - x) / mapConfig.mapWidth;  // Scale the x-distance by map width
+                float dy = 2.0f * (centerY - y) / mapConfig.mapHeight;  // Scale the y-distance by map height
+                float distance = std::sqrt(dx * dx + dy * dy);
+                distance = 1 / (1 + std::exp(-10 * (distance - mapConfig.distanceFromCenter)));
                 noise = (1 - distance) * noise;
-                data[y * mapWidth + x] = noise;
+                heightMap[y * mapConfig.mapWidth + x] = noise;
 
                 // Print progress
                 pixelsProcessed++;
-                if ((pixelsProcessed % ((mapWidth * mapHeight) / 10)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
-                    float progress = (float)pixelsProcessed / (mapWidth * mapHeight);
+                if ((pixelsProcessed % ((mapConfig.mapWidth * mapConfig.mapHeight) / 10)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
+                    float progress = (float)pixelsProcessed / (mapConfig.mapWidth * mapConfig.mapHeight);
                     std::cout << "\rMap Generation Progress: " << progress * 100 << "%" << std::endl;
                 }
             }
@@ -254,10 +83,10 @@ void generateNoiseHeightMap(std::vector<float>& data) {
     };
 
     // Start threads
-    int sliceHeight = mapHeight / numThreads;
+    int sliceHeight = mapConfig.mapHeight / numThreads;
     for (int i = 0; i < numThreads; ++i) {
         int startY = i * sliceHeight;
-        int endY = (i == numThreads - 1) ? mapHeight : (i + 1) * sliceHeight;  // ensure last slice goes to end
+        int endY = (i == numThreads - 1) ? mapConfig.mapHeight : (i + 1) * sliceHeight;  // ensure last slice goes to end
         threads[i] = std::thread(generateNoiseHeightMapPixels, startY, endY);
     }
 
@@ -270,31 +99,14 @@ void generateNoiseHeightMap(std::vector<float>& data) {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Map Generation Complete: " << elapsed.count() << "s Elapsed, " << pixelsProcessed << " Pixels Processed" << std::endl;
+
+    // Return created map
+    return heightMap;
 }
 
-// Global variables
-int riverCount = (mapWidth * mapHeight) / 20000;
-float maxRiverSpawnHeight = 0.75f; // Default: 0.85
-float minRiverSpawnHeight = 0.6f; // Default: 0.7
-float minRiverDespawnHeight = 0.30f; // Default: 0.30
-int randomPointSpacing = 10; // Default: 10
-float maxDeviation = 15.0; // Default: 15.0
-float minDeviation = 3.0; // Default: 3.0
-int minSearchRiverPointDistance = 10; // Default: 10
-int riverStraightnessThreshold = 15; // Default: 6
-const int minRiverLength = 50; // Default: 10
-const int intersectionRange = 10; // Default: 10
-float startRadius = 1.0f; // Default: 1.0
-float maxRadius = 5.0f; // Default: 5.0
-float sizeScaleRate = 1.5f; // Default: 1.5
-const int maxRiverRadiusLength = 300; // Default: 300
-float riverMinDepth = 0.39f; // Default: 0.39
-float riverMaxDepth = 0.37f; // Default: 0.37
-float terrainMinDepth = 0.40f; // Default: 0.40
-float terrainDistortion = 0.025f; // Default: 0.025
-float startTerrainCarveRadius = 1.5f; // Default: 1.5
-float maxTerrainCarveRadius = 8.0f; // Default: 8.0
-float sizeTerrainCarveScaleRate = 1.5f; // Default: 1.25
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  GENERATE RIVERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // River path struct
 struct RiverPath {
@@ -302,21 +114,34 @@ struct RiverPath {
 };
 
 // Initialize rivers
-void initializeRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, std::mt19937& gen, std::uniform_int_distribution<>& distr) {
+void initializeRivers(std::vector<RiverPath>& rivers,
+                      std::vector<float>& heightMap,
+                      std::mt19937& gen,
+                      std::uniform_int_distribution<>& distr,
+                      int mapWidth,
+                      int mapHeight,
+                      float minRiverSpawnHeight,
+                      float maxRiverSpawnHeight) {
+
     for (auto& river : rivers) {
         int index;
         do {
             index = distr(gen);
         } while (heightMap[index] < minRiverSpawnHeight || heightMap[index] > maxRiverSpawnHeight);
 
-        river.path.push_back({index / mapHeight, index % mapWidth});
+        river.path.push_back({index / mapWidth, index % mapHeight});
     }
 }
 
 // Perform circular search to find nearest lower point from given point
-std::pair<int, int> circularSearch(int x, int y, const std::vector<float>& heightMap) {
+std::pair<int, int> circularSearch(int x, int y,
+                                   const std::vector<float>& heightMap,
+                                   int mapWidth,
+                                   int mapHeight,
+                                   int minSearchRiverPointDistance) {
+
     std::pair<int, int> lowestPoint = {x, y};
-    float lowestHeight = heightMap[x * mapHeight + y];
+    float lowestHeight = heightMap[y * mapWidth + x];  // Adjusted indexing
     bool found = false;
     int radius = minSearchRiverPointDistance;
     while (!found) {
@@ -326,7 +151,7 @@ std::pair<int, int> circularSearch(int x, int y, const std::vector<float>& heigh
                     int nx = x + dx;
                     int ny = y + dy;
                     if (nx >= 0 && nx < mapWidth && ny >= 0 && ny < mapHeight) {
-                        int index = nx * mapHeight + ny;
+                        int index = ny * mapWidth + nx;  // Adjusted indexing
                         if (heightMap[index] < lowestHeight) {
                             lowestPoint = {nx, ny};
                             lowestHeight = heightMap[index];
@@ -342,19 +167,25 @@ std::pair<int, int> circularSearch(int x, int y, const std::vector<float>& heigh
 }
 
 // Create river paths
-void createRiverPaths(std::vector<RiverPath>& rivers, std::vector<float>& heightMap) {
+void createRiverPaths(std::vector<RiverPath>& rivers,
+                      std::vector<float>& heightMap,
+                      int mapWidth,
+                      int mapHeight,
+                      float minRiverDespawnHeight,
+                      int minSearchRiverPointDistance) {
+
     for (auto& river : rivers) {
         while (true) {
             // Get the last point in the path
             auto [x, y] = river.path.back();
-            int index = x * mapHeight + y;
+            int index = y * mapWidth + x;  // Adjusted indexing
 
             // If the current point is below minRiverDespawnHeight, break
             if (heightMap[index] < minRiverDespawnHeight)
                 break;
 
             // Search for the lower nearest point using the circular search
-            auto lowestPoint = circularSearch(x, y, heightMap);
+            auto lowestPoint = circularSearch(x, y, heightMap, mapWidth, mapHeight, minSearchRiverPointDistance);
 
             // If no point is found (should not happen as the search expands indefinitely), stop carving the path
             if (lowestPoint.first == x && lowestPoint.second == y)
@@ -372,7 +203,13 @@ float getDistance(const std::pair<int, int>& p1, const std::pair<int, int>& p2) 
 }
 
 // Generate a random point between two points
-std::pair<int, int> generateNewPoint(std::pair<int, int> point1, std::pair<int, int> point2, float t, std::mt19937& gen) {
+std::pair<int, int> generateNewPoint(std::pair<int, int> point1,
+                                     std::pair<int, int> point2,
+                                     float t,
+                                     std::mt19937& gen,
+                                     float minDeviation,
+                                     float maxDeviation) {
+
     std::uniform_real_distribution<> distr(minDeviation, maxDeviation);
 
     // Calculate the midpoint between point1 and point2
@@ -389,7 +226,12 @@ std::pair<int, int> generateNewPoint(std::pair<int, int> point1, std::pair<int, 
 }
 
 // Generate random points along paths
-void generateRandomPoints(std::vector<RiverPath>& rivers, std::mt19937& gen) {
+void generateRandomPoints(std::vector<RiverPath>& rivers,
+                          std::mt19937& gen,
+                          int randomPointSpacing,
+                          float minDeviation,
+                          float maxDeviation) {
+
     for (auto& river : rivers) {
         // New path with added points
         std::vector<std::pair<int, int>> newPath;
@@ -405,7 +247,7 @@ void generateRandomPoints(std::vector<RiverPath>& rivers, std::mt19937& gen) {
             // Generate and add new points
             for (int j = 0; j < numNewPoints; j++) {
                 float t = static_cast<float>(j) / numNewPoints;
-                auto newPoint = generateNewPoint(river.path[i], river.path[i+1], t, gen);
+                auto newPoint = generateNewPoint(river.path[i], river.path[i+1], t, gen, minDeviation, maxDeviation);
                 newPath.push_back(newPoint);
             }
 
@@ -461,7 +303,7 @@ void BresenhamLine(int x1, int y1, int x2, int y2, std::vector<std::pair<int, in
 // Redraw paths along B-spline curves
 void redrawPaths(std::vector<RiverPath>& rivers) {
     for (auto& river : rivers) {
-        // Generate uniform knot vector
+        // Generate uniform-knot vector
         std::vector<float> knots(river.path.size() + 4);
         for (size_t i = 0; i < knots.size(); i++) {
             knots[i] = static_cast<float>(i) / (knots.size() - 1);
@@ -519,7 +361,7 @@ void removeLoopsAndDuplicates(std::vector<RiverPath>& rivers) {
 }
 
 // Remove rivers that are considered too straight
-void removeStraightRivers(std::vector<RiverPath>& rivers) {
+void removeStraightRivers(std::vector<RiverPath>& rivers, int riverStraightnessThreshold) {
     std::vector<RiverPath> filteredRivers;
     for (const auto& river : rivers) {
         // Initialize direction with a large number for the first comparison
@@ -556,15 +398,15 @@ void removeStraightRivers(std::vector<RiverPath>& rivers) {
 }
 
 // Combine rivers which intersect
-void combineIntersectingRivers(std::vector<RiverPath>& rivers) {
+void combineIntersectingRivers(std::vector<RiverPath>& rivers, int intersectionRange) {
     for (size_t i = 0; i < rivers.size(); ++i) {
         for (size_t j = i + 1; j < rivers.size(); ++j) {
             auto& river1 = rivers[i];
             auto& river2 = rivers[j];
 
             bool intersectionFound = false;
-            int intersectionIndexRiver1 = 0;
-            int intersectionIndexRiver2 = 0;
+            int intersectionIndexRiver1;
+            int intersectionIndexRiver2;
 
             for (int k = 0; k < river1.path.size(); ++k) {
                 for (int l = 0; l < river2.path.size(); ++l) {
@@ -603,37 +445,37 @@ void combineIntersectingRivers(std::vector<RiverPath>& rivers) {
 }
 
 // Remove rivers which are considered too short
-void checkRiverLength(std::vector<RiverPath>& rivers) {
+void checkRiverLength(std::vector<RiverPath>& rivers, int minRiverLength) {
     rivers.erase(std::remove_if(rivers.begin(), rivers.end(), [&](const RiverPath& river){
         return river.path.size() < minRiverLength;
     }), rivers.end());
 }
 
 // Carve rivers into the heightmap
-void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap) {
+void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, MapConfig mapConfig) {
     for (auto& river : rivers) {
         int riverPointCount = river.path.size();
         for (int i = 0; i < riverPointCount; i++) {
             auto& point = river.path[i];
 
-            float t = std::min(1.0f, static_cast<float>(i) / maxRiverRadiusLength);  // normalize the current river point index
-            float currentRadius = startRadius + (maxRadius - startRadius) * std::pow(t, sizeScaleRate);  // interpolate the radius
+            float t = std::min(1.0f, static_cast<float>(i) / mapConfig.maxRiverRadiusLength);  // normalize the current river point index
+            float currentRadius = mapConfig.startRadius + (mapConfig.maxRadius - mapConfig.startRadius) * std::pow(t, mapConfig.sizeScaleRate);  // interpolate the radius
             int roundedRadius = static_cast<int>(std::round(currentRadius));
-            float currentTerrainCarveRadius = startTerrainCarveRadius + (maxTerrainCarveRadius - startTerrainCarveRadius) * std::pow(t, sizeTerrainCarveScaleRate);  // interpolate the terrain carving radius
+            float currentTerrainCarveRadius = mapConfig.startTerrainCarveRadius + (mapConfig.maxTerrainCarveRadius - mapConfig.startTerrainCarveRadius) * std::pow(t, mapConfig.sizeTerrainCarveScaleRate);  // interpolate the terrain carving radius
             int roundedTerrainCarveRadius = static_cast<int>(std::round(currentTerrainCarveRadius));
 
             // Terrain carving
-            for (int y = std::max(0, point.first - roundedTerrainCarveRadius); y < std::min(mapHeight, point.first + roundedTerrainCarveRadius); y++) {
-                for (int x = std::max(0, point.second - roundedTerrainCarveRadius); x < std::min(mapWidth, point.second + roundedTerrainCarveRadius); x++) {
-                    float dx = point.first - y;
-                    float dy = point.second - x;
+            for (int x = std::max(0, point.first - roundedTerrainCarveRadius); x < std::min(mapConfig.mapWidth, point.first + roundedTerrainCarveRadius); x++) {
+                for (int y = std::max(0, point.second - roundedTerrainCarveRadius); y < std::min(mapConfig.mapHeight, point.second + roundedTerrainCarveRadius); y++) {
+                    float dx = point.first - x;
+                    float dy = point.second - y;
                     float distance = std::sqrt(dx * dx + dy * dy);
 
                     if (distance > currentRadius && distance <= currentTerrainCarveRadius) {
                         bool insideRiver = false;
                         for (auto& riverPoint : river.path) {
-                            float dxRiver = riverPoint.first - y;
-                            float dyRiver = riverPoint.second - x;
+                            float dxRiver = riverPoint.first - x;
+                            float dyRiver = riverPoint.second - y;
                             float distanceRiver = std::sqrt(dxRiver * dxRiver + dyRiver * dyRiver);
                             if (distanceRiver <= currentRadius) {
                                 insideRiver = true;
@@ -642,9 +484,9 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap) 
                         }
 
                         if (!insideRiver) {
-                            float distortion = (currentTerrainCarveRadius - distance) / (currentTerrainCarveRadius - currentRadius) * terrainDistortion;  // interpolate the terrain distortion
-                            if (heightMap[y * mapWidth + x] > terrainMinDepth) {
-                                heightMap[y * mapWidth + x] = std::max(heightMap[y * mapWidth + x] - distortion, terrainMinDepth);  // subtract distortion and prevent it from going below riverMinDepth
+                            float distortion = (currentTerrainCarveRadius - distance) / (currentTerrainCarveRadius - currentRadius) * mapConfig.terrainDistortion;  // interpolate the terrain distortion
+                            if (heightMap[y * mapConfig.mapWidth + x] > mapConfig.terrainMinDepth) {
+                                heightMap[y * mapConfig.mapWidth + x] = std::max(heightMap[y * mapConfig.mapWidth + x] - distortion, mapConfig.terrainMinDepth);  // subtract distortion and prevent it from going below riverMinDepth
                             }
                         }
                     }
@@ -652,17 +494,17 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap) 
             }
 
             // River carving
-            for (int y = std::max(0, point.first - roundedRadius); y < std::min(mapHeight, point.first + roundedRadius); y++) {
-                for (int x = std::max(0, point.second - roundedRadius); x < std::min(mapWidth, point.second + roundedRadius); x++) {
-                    float dx = point.first - y;
-                    float dy = point.second - x;
+            for (int x = std::max(0, point.first - roundedRadius); x < std::min(mapConfig.mapWidth, point.first + roundedRadius); x++) {
+                for (int y = std::max(0, point.second - roundedRadius); y < std::min(mapConfig.mapHeight, point.second + roundedRadius); y++) {
+                    float dx = point.first - x;
+                    float dy = point.second - y;
                     float distance = std::sqrt(dx * dx + dy * dy);
 
                     if (distance <= currentRadius) {
                         float normalizedDistance = distance / currentRadius;  // distance normalized to [0, 1], 0 being the center, 1 being the edge
-                        float newHeight = riverMaxDepth * (1 - normalizedDistance) + riverMinDepth * normalizedDistance;  // interpolate between riverMaxDepth and riverMinDepth
-                        if (heightMap[y * mapWidth + x] > newHeight) { // This is to prevent heights which are lower than the riverMinDepth from being effected
-                            heightMap[y * mapWidth + x] = newHeight;
+                        float newHeight = mapConfig.riverMaxDepth * (1 - normalizedDistance) + mapConfig.riverMinDepth * normalizedDistance;  // interpolate between riverMaxDepth and riverMinDepth
+                        if (heightMap[y * mapConfig.mapWidth + x] > newHeight) { // This is to prevent heights which are lower than the riverMinDepth from being effected
+                            heightMap[y * mapConfig.mapWidth + x] = newHeight;
                         }
                     }
                 }
@@ -672,58 +514,56 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap) 
 }
 
 // Generate rivers in heightmap function
-void generateRiversInHeightMap(std::vector<float>& heightMap) {
+void generateRiversInHeightMap(MapConfig mapConfig, std::vector<float>& heightMap) {
     std::cout << "Initializing Rivers..." << std::endl;
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(0, mapWidth * mapHeight - 1);
-    std::vector<RiverPath> rivers(riverCount);
-    initializeRivers(rivers, heightMap, gen, distr);
+    std::uniform_int_distribution<> distr(0, mapConfig.mapWidth * mapConfig.mapHeight - 1);
+    std::vector<RiverPath> rivers(mapConfig.riverCount);
+    initializeRivers(rivers, heightMap, gen, distr, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverSpawnHeight, mapConfig.maxRiverSpawnHeight);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Creating river paths..." << std::endl;
-    createRiverPaths(rivers, heightMap);
+    createRiverPaths(rivers, heightMap, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverDespawnHeight, mapConfig.minSearchRiverPointDistance);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Generating random points along paths..." << std::endl;
-    generateRandomPoints(rivers, gen);
+    generateRandomPoints(rivers, gen, mapConfig.randomPointSpacing, mapConfig.minDeviation, mapConfig.maxDeviation);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Redrawing paths along B-spline curves..." << std::endl;
     redrawPaths(rivers);
+    std::cout << rivers.size() << std::endl;
 
-    std::cout << "Removing loops and duplicate points in rivers..." << std::endl;
-    removeLoopsAndDuplicates(rivers);
+    // TODO: This makes rivers disappear
+//    std::cout << "Removing loops and duplicate points in rivers..." << std::endl;
+//    removeLoopsAndDuplicates(rivers);
+//    std::cout << rivers.size() << std::endl;
 
     std::cout << "Removing straight rivers..." << std::endl;
-    removeStraightRivers(rivers);
+    removeStraightRivers(rivers, mapConfig.riverStraightnessThreshold);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Combining rivers that intersect..." << std::endl;
-    combineIntersectingRivers(rivers);
+    combineIntersectingRivers(rivers, mapConfig.intersectionRange);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Removing short rivers..." << std::endl;
-    checkRiverLength(rivers);
+    checkRiverLength(rivers, mapConfig.minRiverLength);
+    std::cout << rivers.size() << std::endl;
 
     std::cout << "Carving heightmap..." << std::endl;
-    carveRivers(rivers, heightMap);
+    carveRivers(rivers, heightMap, mapConfig);
+    std::cout << rivers.size() << std::endl;
 }
 
-// Erode heightmap parameters
-const int numDrops = mapWidth * mapHeight / 3;
-const float minDropSpawnHeight = 0.5; // Default: 0.5
-const int erosionRadius = 3; // Default: 3
-const float inertia = 0.05f; // Default: 0.05
-const float sedimentCapacityFactor = 4.0f; // Default: 4.0
-const float minSedimentCapacity = 0.01f; // Default: 0.01
-const float erodeSpeed = 0.3f; // Default: 0.3
-const float depositSpeed = 0.3f; // Default: 0.3
-const float evaporateSpeed = 0.01f; // Default: 0.01
-const float gravity = 4.0f; // Default: 4.0
-const int maxDropLifeTime = 100; // Default: 30
-const float minDropDespawnHeight = 0.4f; // Default: 0.35;
-const float initialWaterVolume = 1.0f; // Default: 1.0
-const float minWaterVolume = 0.01f; // Default 0.01
-const float initialSpeed = 1.0f; // Default: 1.0
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  SIMULATE EROSION
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// By: https://github.com/SebLague/Hydraulic-Erosion/tree/Coding-Adventure-E01
 
 // Initialize erosion brush function
-void initializeErosionBrush(std::vector<std::vector<int>>& erosionBrushIndices, std::vector<std::vector<float>>& erosionBrushWeights) {
+void initializeErosionBrush(std::vector<std::vector<int>>& erosionBrushIndices, std::vector<std::vector<float>>& erosionBrushWeights, int mapWidth, int mapHeight, int erosionRadius) {
 
     // Indicate start
     std::cout << "Initializing Erosion Brush..." << std::endl;
@@ -745,7 +585,7 @@ void initializeErosionBrush(std::vector<std::vector<int>>& erosionBrushIndices, 
     int tasksPerThread = erosionBrushIndices.size() / numThreads;
 
     // Initialize erosion brush thread
-    auto initializeErosionBrushPixels = [&erosionBrushIndices, &erosionBrushWeights, &weights, &xOffsets, &yOffsets, &pixelsProcessed](int startIndex, int endIndex) {
+    auto initializeErosionBrushPixels = [&erosionBrushIndices, &erosionBrushWeights, &weights, &xOffsets, &yOffsets, &pixelsProcessed, &mapWidth, &mapHeight, &erosionRadius](int startIndex, int endIndex) {
         // Variables to hold the sum of weights and index position
         float weightSum = 0;
         int addIndex = 0;
@@ -856,7 +696,7 @@ struct HeightAndGradient {
 };
 
 // Calculate height and gradient function
-HeightAndGradient calculateHeightAndGradient(std::vector<float>& heightMap, float posX, float posY) {
+HeightAndGradient calculateHeightAndGradient(std::vector<float>& heightMap, float posX, float posY, int mapWidth, int mapHeight) {
     // Get current position index
     int coordX = (int) posX;
     int coordY = (int) posY;
@@ -872,24 +712,24 @@ HeightAndGradient calculateHeightAndGradient(std::vector<float>& heightMap, floa
     float swHeight = (coordY + 1 < mapWidth) ? heightMap[nwIndex + mapWidth] : nwHeight;
     float seHeight = ((coordX + 1 < mapWidth) && (coordY + 1 < mapWidth)) ? heightMap[nwIndex + mapWidth + 1] : nwHeight;
 
-    //Calculate the drop's direction of flow with bilinear interpolation of height difference along the edges
+    //Calculate the drop's direction of flow with bi-linear interpolation of height difference along the edges
     float gradientX = (neHeight - nwHeight) * (1 - y) + (seHeight - swHeight) * y;
     float gradientY = (swHeight - nwHeight) * (1 - y) + (seHeight - neHeight) * y;
 
-    // Calculate the height with bilinear interpolation of the heights of the nodes of the cell
+    // Calculate the height with bi-linear interpolation of the heights of the nodes of the cell
     float height = nwHeight * (1 - x) * (1 - y) + neHeight * x * (1 - y) + swHeight * (1 - x) * y + seHeight * x * y;
 
     // Create new height and gradient struct
     return HeightAndGradient(height, gradientX, gradientY);
 }
 
-// Erode height map function
+// Simulate erosion function
 // TODO: This breaks if the mapWidth != mapHeight
-void erodeHeightMap (std::vector<float>& heightMap) {
+void simulateErosion(MapConfig mapConfig, std::vector<float>& heightMap) {
     // Initialize erosion brush indices and weights
     std::vector<std::vector<int>> erosionBrushIndices;
     std::vector<std::vector<float>> erosionBrushWeights;
-    initializeErosionBrush(erosionBrushIndices, erosionBrushWeights);
+    initializeErosionBrush(erosionBrushIndices, erosionBrushWeights, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.erosionRadius);
 
     // Indicate start
     std::cout << "Starting Erosion Simulation..." << std::endl;
@@ -907,38 +747,38 @@ void erodeHeightMap (std::vector<float>& heightMap) {
             float posX;
             float posY;
             while(true) {
-                posX = rand() % mapWidth;
-                posY = rand() % mapHeight;
+                posX = rand() % mapConfig.mapWidth;
+                posY = rand() % mapConfig.mapHeight;
 
                 // Check that random position is at least the min drop spawn height
-                if (heightMap[posY * mapWidth + posX] >= minDropSpawnHeight) {
+                if (heightMap[posY * mapConfig.mapWidth + posX] >= mapConfig.minDropSpawnHeight) {
                     break;
                 }
             }
 
             float dirX = 0;
             float dirY = 0;
-            float speed = initialSpeed;
-            float water = initialWaterVolume;
+            float speed = mapConfig.initialSpeed;
+            float water = mapConfig.initialWaterVolume;
             float sediment = 0;
 
             // Go through life of water drop
-            for (int lifeTime = 0; lifeTime < maxDropLifeTime; lifeTime++) {
+            for (int lifeTime = 0; lifeTime < mapConfig.maxDropLifeTime; lifeTime++) {
                 // Get current position index
                 int nodeX = (int) posX;
                 int nodeY = (int) posY;
-                int dropIndex = nodeY * mapWidth + nodeX;
+                int dropIndex = nodeY * mapConfig.mapWidth + nodeX;
 
                 // Calculate drop's offset inside the cell
                 float cellOffsetX = posX - nodeX;
                 float cellOffsetY = posY - nodeY;
 
                 // Calculate the drop's height and direction of flow with bilinear interpolation of surround heights
-                HeightAndGradient heightAndGradient = calculateHeightAndGradient(heightMap, posX, posY);
+                HeightAndGradient heightAndGradient = calculateHeightAndGradient(heightMap, posX, posY, mapConfig.mapWidth, mapConfig.mapHeight);
 
                 // Update the drop's direction and position (move 1 position unit regardless of speed)
-                dirX = (dirX * inertia - heightAndGradient.gradientX * (1 - inertia));
-                dirY = (dirY * inertia - heightAndGradient.gradientY * (1 - inertia));
+                dirX = (dirX * mapConfig.inertia - heightAndGradient.gradientX * (1 - mapConfig.inertia));
+                dirY = (dirY * mapConfig.inertia - heightAndGradient.gradientY * (1 - mapConfig.inertia));
 
                 // Normalize direction
                 float len = std::sqrt(dirX * dirX + dirY * dirY);
@@ -950,34 +790,34 @@ void erodeHeightMap (std::vector<float>& heightMap) {
                 posY += dirY;
 
                 // Stop simulating drop if it's not moving or has flowed over edge of map
-                if ((dirX == 0 && dirY == 0) || posX < 0 || posX >= mapWidth - 1 || posY < 0 || posY >= mapHeight - 1) {
+                if ((dirX == 0 && dirY == 0) || posX < 0 || posX >= mapConfig.mapWidth - 1 || posY < 0 || posY >= mapConfig.mapHeight - 1) {
                     break;
                 }
 
                 // Find the drop's new height and calculate the deltaHeight
-                float newHeight = calculateHeightAndGradient(heightMap, posX, posY).height;
+                float newHeight = calculateHeightAndGradient(heightMap, posX, posY, mapConfig.mapWidth, mapConfig.mapHeight).height;
                 float deltaHeight = newHeight - heightAndGradient.height;
 
                 // Calculate the drop's sediment capacity (higher when moving fast down a slope and contains lots of water)
-                float sedimentCapacity = std::max(-deltaHeight * speed * water * sedimentCapacityFactor, minSedimentCapacity);
+                float sedimentCapacity = std::max(-deltaHeight * speed * water * mapConfig.sedimentCapacityFactor, mapConfig.minSedimentCapacity);
 
                 // If carrying more sediment than capacity, or if flowing uphill:
                 if (sediment > sedimentCapacity || deltaHeight > 0) {
                     // If moving uphill (deltaHeight > 0) try to fill up to current height, otherwise deposit a fraction of the excess sediment
-                    float amountToDeposit = (deltaHeight > 0) ? std::min(deltaHeight, sediment) : (sediment - sedimentCapacity) * depositSpeed;
+                    float amountToDeposit = (deltaHeight > 0) ? std::min(deltaHeight, sediment) : (sediment - sedimentCapacity) * mapConfig.depositSpeed;
                     sediment -= amountToDeposit;
 
-                    // Add the sediment to the four nodes of the current cell using bilinear interpolation
+                    // Add the sediment to the four nodes of the current cell using bi-linear interpolation
                     // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
                     heightMap[dropIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
                     heightMap[dropIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
-                    heightMap[dropIndex + mapWidth] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
-                    heightMap[dropIndex + mapWidth + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
+                    heightMap[dropIndex + mapConfig.mapWidth] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
+                    heightMap[dropIndex + mapConfig.mapWidth + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
 
                 } else {
                     // Erode a fraction of the drop's current carry capacity
                     // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
-                    float amountToErode = std::min((sedimentCapacity - sediment) * erodeSpeed, -deltaHeight);
+                    float amountToErode = std::min((sedimentCapacity - sediment) * mapConfig.erodeSpeed, -deltaHeight);
 
                     // Use erosion brush to erode from all nodes inside the droplet's erosion radius
                     for (int brushPointIndex = 0; brushPointIndex < erosionBrushIndices[dropIndex].size(); brushPointIndex++) {
@@ -990,33 +830,33 @@ void erodeHeightMap (std::vector<float>& heightMap) {
                 }
 
                 // Update drop's speed and water content
-                speed = std::sqrt(speed * speed + deltaHeight * gravity);
-                water *= (1 - evaporateSpeed);
+                speed = std::sqrt(speed * speed + deltaHeight * mapConfig.gravity);
+                water *= (1 - mapConfig.evaporateSpeed);
 
                 // Prevent glitched values
                 if (std::isnan(speed) || std::isnan(sediment)) {
                     break;
                 }
 
-                if (water < minWaterVolume || heightMap[posY * mapWidth + posX] < minDropDespawnHeight) {
+                if (water < mapConfig.minWaterVolume || heightMap[posY * mapConfig.mapWidth + posX] < mapConfig.minDropDespawnHeight) {
                     break;
                 }
             }
 
             // Print progress
             dropsProcessed++;
-            if ((dropsProcessed % (numDrops / 20)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
-                float progress = (float)dropsProcessed / numDrops;
+            if ((dropsProcessed % (mapConfig.numDrops / 20)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
+                float progress = (float)dropsProcessed / mapConfig.numDrops;
                 std::cout << "\rErosion Simulation Progress: " << progress * 100 << "%" << std::endl;
             }
         }
     };
 
     // Start threads
-    int sliceSize = numDrops / numThreads;
+    int sliceSize = mapConfig.numDrops / numThreads;
     for (int i = 0; i < numThreads; ++i) {
         int startIter = i * sliceSize;
-        int endIter = (i == numThreads - 1) ? numDrops : (i + 1) * sliceSize;  // ensure last slice goes to end
+        int endIter = (i == numThreads - 1) ? mapConfig.numDrops : (i + 1) * sliceSize;  // ensure last slice goes to end
         futures[i] = std::async(std::launch::async, simulateDrop, startIter, endIter);
     }
 
@@ -1031,23 +871,26 @@ void erodeHeightMap (std::vector<float>& heightMap) {
     std::cout << "Erosion Simulation Complete: " << elapsed.count() << "s Elapsed, " << dropsProcessed << " Drops Simulated" << std::endl;
 }
 
-// Convert heightmap to colormap function
-std::vector<unsigned char> convertHeightMapToColorMap(std::vector<float>& heightMap) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  CONVERT TO COLOR
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Create color map from height map function
+std::vector<unsigned char> createColorMap(MapConfig mapConfig, std::vector<float>& heightMap) {
     // Indicate start
     std::cout << "Converting HeightMap to RGB Map..." << std::endl;
-    std::atomic<int> pixelsProcessed(0);
     auto start = std::chrono::high_resolution_clock::now();
 
     // Output vector
-    std::vector<unsigned char> output(mapWidth * mapHeight * channels);
+    std::vector<unsigned char> output(mapConfig.mapWidth * mapConfig.mapHeight * mapConfig.channels);
 
-    // Convert heightmap to colormap
-    for (int y = 0; y < mapHeight; ++y) {
-        for (int x = 0; x < mapWidth; ++x) {
-            unsigned char color = static_cast<unsigned char>(heightMap[y * mapWidth + x] * 255);
-            output[(y * mapWidth + x) * channels + 0] = color;
-            output[(y * mapWidth + x) * channels + 1] = color;
-            output[(y * mapWidth + x) * channels + 2] = color;
+    // Convert height map to colormap
+    for (int x = 0; x < mapConfig.mapWidth; ++x) {
+        for (int y = 0; y < mapConfig.mapHeight; ++y) {
+            unsigned char color = static_cast<unsigned char>(heightMap[y * mapConfig.mapWidth + x] * 255);
+            output[(y * mapConfig.mapWidth + x) * mapConfig.channels + 0] = color;
+            output[(y * mapConfig.mapWidth + x) * mapConfig.channels + 1] = color;
+            output[(y * mapConfig.mapWidth + x) * mapConfig.channels + 2] = color;
         }
     }
 
@@ -1060,30 +903,9 @@ std::vector<unsigned char> convertHeightMapToColorMap(std::vector<float>& height
     return output;
 }
 
-// Global level variables (0.0 - 1.0) Note: Should be at least 0.05 thick
-float waterLevel = 0.40f;
-float beachLevel = 0.45f;
-float grassLevel = 0.70f;
-float mountainLevel = 0.80f;
-
-// Number of layers for each level
-float totalLayers = 40;
-int waterLayers = round(waterLevel * totalLayers);
-int beachLayers = round((beachLevel - waterLevel) * totalLayers);
-int grassLayers = round((grassLevel - beachLevel) * totalLayers);
-int mountainLayers = round((mountainLevel - grassLevel) * totalLayers);
-int snowLayers = round((1.0 - mountainLevel) * totalLayers);
-
-// Color struct
-struct Color {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-};
-
 // Lerp between two colors
-Color lerpColor(const Color& start, const Color& end, float t) {
-    Color result;
+MapColor lerpColor(const MapColor& start, const MapColor& end, float t) {
+    MapColor result;
     result.r = static_cast<unsigned char>(start.r * (1 - t) + end.r * t);
     result.g = static_cast<unsigned char>(start.g * (1 - t) + end.g * t);
     result.b = static_cast<unsigned char>(start.b * (1 - t) + end.b * t);
@@ -1091,8 +913,13 @@ Color lerpColor(const Color& start, const Color& end, float t) {
 }
 
 // Create color interpolation
-std::vector<Color> initializeColorInterpolation(const Color& minColor, const Color& maxColor, int layers) {
-    std::vector<Color> colors(layers);
+std::vector<MapColor> initializeColorInterpolation(const MapColor& minColor, const MapColor& maxColor, int layers) {
+    std::vector<MapColor> colors(layers);
+
+    if (layers <= 1) {
+        colors[0] = minColor;
+        return colors;
+    }
 
     for (int i = 0; i < layers; ++i) {
         float t = static_cast<float>(i) / (layers - 1);  // Fraction along the interpolation
@@ -1102,55 +929,39 @@ std::vector<Color> initializeColorInterpolation(const Color& minColor, const Col
     return colors;
 }
 
-// Apply color to colormap function
-void applyColorToColorMap(std::vector<unsigned char>& colorMap) {
+// Paint color map
+void paintColorMap(MapConfig mapConfig, std::vector<unsigned char>& colorMap) {
     // Indicate start
     std::cout << "Applying Colors to RGB Map..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Maximum and minimum RGB colors for each level
-    Color minWaterColor = {37, 89, 134};
-    Color maxWaterColor = {140, 183, 220};
-
-    Color minBeachColor = {230, 218, 166};
-    Color maxBeachColor = {206, 190, 124};
-
-    Color minGrassColor = {180, 218, 91};
-    Color maxGrassColor = {93, 121, 30};
-
-    Color minMountainColor = {92, 88, 70};
-    Color maxMountainColor = {144, 142, 136};
-
-    Color minSnowColor = {223, 222, 216};
-    Color maxSnowColor = {245, 244, 239};
-
     // Initialize the color interpolations for each level
-    std::vector<Color> waterColors = initializeColorInterpolation(minWaterColor, maxWaterColor, waterLayers);
-    std::vector<Color> beachColors = initializeColorInterpolation(minBeachColor, maxBeachColor, beachLayers);
-    std::vector<Color> grassColors = initializeColorInterpolation(minGrassColor, maxGrassColor, grassLayers);
-    std::vector<Color> mountainColors = initializeColorInterpolation(minMountainColor, maxMountainColor, mountainLayers);
-    std::vector<Color> snowColors = initializeColorInterpolation(minSnowColor, maxSnowColor, snowLayers);
+    std::vector<MapColor> waterColors = initializeColorInterpolation(mapConfig.minWaterColor, mapConfig.maxWaterColor, mapConfig.waterLayers);
+    std::vector<MapColor> beachColors = initializeColorInterpolation(mapConfig.minBeachColor, mapConfig.maxBeachColor, mapConfig.beachLayers);
+    std::vector<MapColor> grassColors = initializeColorInterpolation(mapConfig.minGrassColor, mapConfig.maxGrassColor, mapConfig.grassLayers);
+    std::vector<MapColor> mountainColors = initializeColorInterpolation(mapConfig.minMountainColor, mapConfig.maxMountainColor, mapConfig.mountainLayers);
+    std::vector<MapColor> snowColors = initializeColorInterpolation(mapConfig.minSnowColor, mapConfig.maxSnowColor, mapConfig.snowLayers);
 
-    // Apply colors to colormap based on grayscale values and different levels
+    // Apply colors to color map based on grayscale values and different levels
     for (size_t i = 0; i < colorMap.size(); i += 3) {
         float grayscale = static_cast<float>(colorMap[i]) / 255.0;
-        Color color;
+        MapColor color;
 
         // Determine color based on grayscale value
-        if (grayscale < waterLevel) { // Apply water color
-            int index = std::min(static_cast<int>((grayscale / waterLevel) * waterLayers), waterLayers - 1);
+        if (grayscale < mapConfig.waterLevel) { // Apply water color
+            int index = std::min(static_cast<int>((grayscale / mapConfig.waterLevel) * mapConfig.waterLayers), mapConfig.waterLayers - 1);
             color = waterColors[index];
-        } else if (grayscale < beachLevel) { // Apply beach color
-            int index = std::min(static_cast<int>(((grayscale - waterLevel) / (beachLevel - waterLevel)) * beachLayers), beachLayers - 1);
+        } else if (grayscale < mapConfig.beachLevel) { // Apply beach color
+            int index = std::min(static_cast<int>(((grayscale - mapConfig.waterLevel) / (mapConfig.beachLevel - mapConfig.waterLevel)) * mapConfig.beachLayers), mapConfig.beachLayers - 1);
             color = beachColors[index];
-        } else if (grayscale < grassLevel) { // Apply grass color
-            int index = std::min(static_cast<int>(((grayscale - beachLevel) / (grassLevel - beachLevel)) * grassLayers), grassLayers - 1);
+        } else if (grayscale < mapConfig.grassLevel) { // Apply grass color
+            int index = std::min(static_cast<int>(((grayscale - mapConfig.beachLevel) / (mapConfig.grassLevel - mapConfig.beachLevel)) * mapConfig.grassLayers), mapConfig.grassLayers - 1);
             color = grassColors[index];
-        } else if (grayscale < mountainLevel) { // Apply mountain color
-            int index = std::min(static_cast<int>(((grayscale - grassLevel) / (mountainLevel - grassLevel)) * mountainLayers), mountainLayers - 1);
+        } else if (grayscale < mapConfig.mountainLevel) { // Apply mountain color
+            int index = std::min(static_cast<int>(((grayscale - mapConfig.grassLevel) / (mapConfig.mountainLevel - mapConfig.grassLevel)) * mapConfig.mountainLayers), mapConfig.mountainLayers - 1);
             color = mountainColors[index];
         } else { // Apply snow color
-            int index = std::min(static_cast<int>(((grayscale - mountainLevel) / (1.0 - mountainLevel)) * snowLayers), snowLayers - 1);
+            int index = std::min(static_cast<int>(((grayscale - mapConfig.mountainLevel) / (1.0 - mapConfig.mountainLevel)) * mapConfig.snowLayers), mapConfig.snowLayers - 1);
             color = snowColors[index];
         }
 
@@ -1166,41 +977,64 @@ void applyColorToColorMap(std::vector<unsigned char>& colorMap) {
     std::cout << "Apply Colors to ColorMap Complete: " << elapsed.count() << "s Elapsed" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  GENERATE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Main
-int main() {
+// Generate map function
+MapData generate(MapConfig mapConfig) {
+    // Initialize map
+    MapData mapData;
+
     // Set random number seed
     srand(static_cast<unsigned int>(std::time(0)));
 
-    // Prepare a vector to hold pixel data
-    std::vector<float> heightMap(mapWidth * mapHeight);
-
-    // Perform map generation
-    generateNoiseHeightMap(heightMap);
+    // Create height map
+    std::vector<float> heightMap = generateNoiseHeightMap(mapConfig);
 
     // Perform erosion
-    erodeHeightMap(heightMap);
+    simulateErosion(mapConfig, heightMap);
 
-    // Perform river cutting
-    generateRiversInHeightMap(heightMap);
+    // Perform river generation
+    generateRiversInHeightMap(mapConfig, heightMap);
 
-    // Convert heightmap to color map
-    std::vector<unsigned char> colorMap = convertHeightMapToColorMap(heightMap);
+    // Save height map
+    mapData.heightMap = heightMap;
 
-    // Write the image to file
-    if (!stbi_write_png("nocolor_map.png", mapWidth, mapHeight, channels, colorMap.data(), mapWidth * channels)) {
-        std::cerr << "Error writing image to file" << std::endl;
+    // Create color map
+    std::vector<unsigned char> colorMap = createColorMap(mapConfig, heightMap);
+
+    // Save grayscale map
+    mapData.grayscaleMap = colorMap;
+
+    // Set colors in color map
+    paintColorMap(mapConfig, colorMap);
+
+    // Save color map
+    mapData.colorMap = colorMap;
+
+    // Save config
+    mapData.mapConfig = mapConfig;
+
+    // Return map data
+    return mapData;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////  MISCELLANEOUS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Save maps function
+bool saveColorAndHeightMaps(MapData mapData) {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
+    // Write the map data images to file
+    if (!stbi_write_png("color_map.png", mapData.mapConfig.mapWidth, mapData.mapConfig.mapHeight, mapData.mapConfig.channels, mapData.colorMap.data(), mapData.mapConfig.mapWidth * mapData.mapConfig.channels)
+    || !stbi_write_png("grayscale_map.png", mapData.mapConfig.mapWidth, mapData.mapConfig.mapHeight, mapData.mapConfig.channels, mapData.grayscaleMap.data(), mapData.mapConfig.mapWidth * mapData.mapConfig.channels)) {
+        std::cerr << "Error writing maps to file!" << std::endl;
+        return false;
     }
 
-    // Apply colors
-    applyColorToColorMap(colorMap);
-
-    // Write the image to file
-    if (!stbi_write_png("color_map.png", mapWidth, mapHeight, channels, colorMap.data(), mapWidth * channels)) {
-        std::cerr << "Error writing image to file" << std::endl;
-        return 1;
-    }
-
-    std::cout << "Image successfully written to file" << std::endl;
-    return 0;
+    std::cout << "Maps saved successfully!" << std::endl;
+    return true;
 }

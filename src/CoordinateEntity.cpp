@@ -2,7 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include "coordinateEntity.hpp"
+#include "CoordinateEntity.hpp"
 
 void Grid::add_entity(CoordinateEntity* entity) {
     int x = static_cast<int>(entity->current_x_coordinate / cell_size);
