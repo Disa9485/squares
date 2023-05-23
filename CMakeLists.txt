@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Specify all include directories
 include_directories(
-        "${CMAKE_CURRENT_LIST_DIR}/libs/nlohmann-json/include"
+        "${CMAKE_CURRENT_LIST_DIR}/libs/JSON/include"
         "${CMAKE_CURRENT_LIST_DIR}/libs"
 )
 

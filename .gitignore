@@ -3,3 +3,4 @@
 cmake-build-debug/
 libs/TGUI/
 libs/SFML/
+libs/JSON/
