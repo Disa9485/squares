@@ -16,4 +16,4 @@ Currently, the only feature in squares.
 ![Color Map](map_gen_examples/color_map0.png)
 
 * Height Map Example:
-![Height Map](map_gen_examples/nocolor_map.png)
+![Height Map](map_gen_examples/grayscale_map0.png)

@@ -173,7 +173,7 @@
 // Main
 int main() {
     // Generate maps
-    MapConfig mapConfig;
+    MapConfig mapConfig = loadMapConfig();
     MapData mapData = generate(mapConfig);
     saveColorAndHeightMaps(mapData);
 

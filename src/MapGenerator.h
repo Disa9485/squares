@@ -56,7 +56,7 @@ struct MapConfig {
     float maxTerrainCarveRadius = 8.0f; // Default: 8.0
     float sizeTerrainCarveScaleRate = 1.5f; // Default: 1.25
 
-    // Erode heightmap parameters
+    //// Erode heightmap parameters ////
     int numDrops = mapWidth * mapHeight / 3; // Should be proportional to map size
     float minDropSpawnHeight = 0.5; // Default: 0.5
     int erosionRadius = 3; // Default: 3
@@ -73,13 +73,14 @@ struct MapConfig {
     float minWaterVolume = 0.01f; // Default 0.01
     float initialSpeed = 1.0f; // Default: 1.0
 
-    // Global level variables (0.0 - 1.0) Note: Should be at least 0.05 thick
+    //// Paint colormap parameters ////
+    // Where on the heightmap each color level ends
     float waterLevel = seaLevel;
     float beachLevel = seaLevel + 0.02;
     float grassLevel = 0.70f;
     float mountainLevel = 0.80f;
 
-    // Number of layers for each level
+    // Number of layers for each level for the color interpolation
     float totalLayers = 40; // Combined level layers
     int waterLayers = round(waterLevel * totalLayers);
     int beachLayers = round((beachLevel - waterLevel) * totalLayers);
@@ -112,8 +113,13 @@ struct MapData {
     std::vector<unsigned char> colorMap; // Store the world map with color
 };
 
+// Load the map configuration from MapConfig.json
+MapConfig loadMapConfig();
+
+// Generate map data with a map config
 MapData generate(MapConfig mapConfig);
 
+// Save color and height maps from map data
 bool saveColorAndHeightMaps(MapData mapData);
 
 #endif
