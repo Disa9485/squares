@@ -588,7 +588,7 @@ void initializeErosionBrush(std::vector<std::vector<int>>& erosionBrushIndices, 
 
             // Calculate the centre position of the point
             int centreX = i % mapWidth;
-            int centreY = i / mapHeight;
+            int centreY = i / mapWidth;
 
             // Check if point lies within the brush's reach
             if (centreY <= erosionRadius
@@ -702,8 +702,8 @@ HeightAndGradient calculateHeightAndGradient(std::vector<float>& heightMap, floa
     int nwIndex = coordY * mapWidth + coordX;
     float nwHeight = heightMap[nwIndex];
     float neHeight = (coordX + 1 < mapWidth) ? heightMap[nwIndex + 1] : nwHeight;
-    float swHeight = (coordY + 1 < mapWidth) ? heightMap[nwIndex + mapWidth] : nwHeight;
-    float seHeight = ((coordX + 1 < mapWidth) && (coordY + 1 < mapWidth)) ? heightMap[nwIndex + mapWidth + 1] : nwHeight;
+    float swHeight = (coordY + 1 < mapHeight) ? heightMap[nwIndex + mapWidth] : nwHeight;
+    float seHeight = ((coordX + 1 < mapWidth) && (coordY + 1 < mapHeight)) ? heightMap[nwIndex + mapWidth + 1] : nwHeight;
 
     //Calculate the drop's direction of flow with bi-linear interpolation of height difference along the edges
     float gradientX = (neHeight - nwHeight) * (1 - y) + (seHeight - swHeight) * y;
@@ -985,8 +985,8 @@ MapData generate(MapConfig mapConfig) {
     // Create height map
     std::vector<float> heightMap = generateNoiseHeightMap(mapConfig);
 
-//    // Perform erosion
-//    simulateErosion(mapConfig, heightMap);
+    // Perform erosion
+    simulateErosion(mapConfig, heightMap);
 
     // Perform river generation
     generateRiversInHeightMap(mapConfig, heightMap);
