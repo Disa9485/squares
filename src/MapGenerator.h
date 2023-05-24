@@ -4,6 +4,9 @@
 #ifndef SQUARES_MAP_GENERATOR_H
 #define SQUARES_MAP_GENERATOR_H
 
+const int DEFAULT_MAP_WIDTH = 1000, DEFAULT_MAP_HEIGHT = 1000;
+const float DEFAULT_SEA_LEVEL = 0.4f, DEFAULT_RIVER_DENSITY = 0.00001f;
+
 // A struct to store color
 struct MapColor {
     unsigned char r;
@@ -14,51 +17,52 @@ struct MapColor {
 // Struct that stores map configuration
 struct MapConfig {
     //// Map general config ////
-    int mapWidth = 1500;
-    int mapHeight = 1500;
     int channels = 3; // RGB channels
-    float seaLevel = 0.4f; // Dictates where water ends and land starts
+    int mapWidth = 1000;
+    int mapHeight = 1000;
+    float seaLevel = 0.4f; // Dictates where water ends and land starts (must be between 0.15 - 0.65)!!!
 
     //// Noise generation config ////
-    float frequency = 0.25; // 0.25 frequency at 1000*1000, 0.15 at 2000*2000, 0.10 at 3000*3000, 0.08 at 4000*4000, 0.07 at 5000*5000
-    int octaves = 12; // Default 12
-    float lacunarity = 2.0f; // Default 2.0
-    float persistence = 0.5f; // Default 0.5
-    float distanceFromCenter = 0.8f; // Default 0.8
+    float frequency = 0.25; // Default: 0.25
+    int octaves = 12; // Default: 12
+    float lacunarity = 2.0f; // Default: 2.0
+    float persistence = 0.5f; // Default: 0.5
+    float distanceFromCenter = 0.8f; // Default: 0.8
 
     //// River generation config ////
     // River spawning
-    int riverCount = (mapWidth * mapHeight) / 10000; // Should be proportional to map size
-    float maxRiverSpawnHeight = 0.75f; // Default: 0.85
-    float minRiverSpawnHeight = 0.50f; // Default: 0.7
+    float riverDensity = 0.0001f; // Default: 0.0001
+    int riverCount = riverDensity * (mapWidth * mapHeight); // Should be proportional to map size
+    float maxRiverSpawnHeight = seaLevel + (1.0 - seaLevel) * 0.75f;
+    float minRiverSpawnHeight = seaLevel + (1.0 - seaLevel) * 0.25f;
     // River path finding
-    int minSearchRiverPointDistance = 20; // Default: 10
-    float minRiverDespawnHeight = 0.30f; // Default: 0.30
+    int circularSearchNextPathMinDistance = 20; // Default: 20
+    float minRiverDespawnHeight = seaLevel - seaLevel * 0.25;
     // River random point placement
-    int randomPointSpacing = 10; // Default: 10
-    float maxDeviation = 15.0; // Default: 15.0
-    float minDeviation = 3.0; // Default: 3.0
+    int randomPointPlacementSpacing = 10; // Default: 10
+    float maxRandomPointDeviation = 15.0; // Default: 15.0
+    float minRandomPointDeviation = 3.0; // Default: 3.0
     // River filtering
-    int riverStraightnessThreshold = 15; // Default: 10
+    int maxRiverStraightness = 15; // Default: 15
     int minRiverLength = 0; // Default: 10 (This can lead to rivers that go nowhere)
     // River intersection stitching
-    int intersectionRange = 10; // Default: 10
+    int riverIntersectionRange = 10; // Default: 10
     // River carving
-    float startRadius = 1.0f; // Default: 1.0
-    float maxRadius = 5.0f; // Default: 5.0
-    float sizeScaleRate = 1.5f; // Default: 1.5
+    float riverStartRadius = 1.0f; // Default: 1.0
+    float riverMaxRadius = 5.0f; // Default: 5.0
+    float riverRadiusLengthScale = 1.5f; // Default: 1.5
+    float terrainCarveDistortion = 0.025f; // Default: 0.025
+    float terrainCarveStartRadius = 1.5f; // Default: 1.5
+    float terrainCarveMaxRadius = 8.0f; // Default: 8.0
+    float terrainCarveLengthScale = 1.5f; // Default: 1.25
     int maxRiverRadiusLength = 300; // Default: 300
-    float riverMinDepth = 0.39f; // Default: 0.39
-    float riverMaxDepth = 0.37f; // Default: 0.37
-    float terrainMinDepth = 0.40f; // Default: 0.40
-    float terrainDistortion = 0.025f; // Default: 0.025
-    float startTerrainCarveRadius = 1.5f; // Default: 1.5
-    float maxTerrainCarveRadius = 8.0f; // Default: 8.0
-    float sizeTerrainCarveScaleRate = 1.5f; // Default: 1.25
+    float riverMinDepth = seaLevel - seaLevel * 0.03;
+    float riverMaxDepth = seaLevel - seaLevel * 0.1;
+    float terrainMinDepth = seaLevel;
 
     //// Erode heightmap parameters ////
     int numDrops = mapWidth * mapHeight / 3; // Should be proportional to map size
-    float minDropSpawnHeight = 0.5; // Default: 0.5
+    float minDropSpawnHeight = seaLevel + (1.0 - seaLevel) * 0.17f;
     int erosionRadius = 3; // Default: 3
     float inertia = 0.05f; // Default: 0.05
     float sedimentCapacityFactor = 4.0f; // Default: 4.0
@@ -68,25 +72,25 @@ struct MapConfig {
     float evaporateSpeed = 0.01f; // Default: 0.01
     float gravity = 4.0f; // Default: 4.0
     int maxDropLifeTime = 100; // Default: 30
-    float minDropDespawnHeight = 0.4f; // Default: 0.35;
     float initialWaterVolume = 1.0f; // Default: 1.0
     float minWaterVolume = 0.01f; // Default 0.01
     float initialSpeed = 1.0f; // Default: 1.0
+    float minDropDespawnHeight = seaLevel - seaLevel * 0.13;
 
     //// Paint colormap parameters ////
     // Where on the heightmap each color level ends
     float waterLevel = seaLevel;
     float beachLevel = seaLevel + 0.02;
-    float grassLevel = 0.70f;
-    float mountainLevel = 0.80f;
+    float grassLevel = seaLevel + (1.0 - seaLevel) * 0.5f;
+    float mountainLevel = seaLevel + (1.0 - seaLevel) * 0.75f;
 
     // Number of layers for each level for the color interpolation
-    float totalLayers = 40; // Combined level layers
-    int waterLayers = round(waterLevel * totalLayers);
-    int beachLayers = round((beachLevel - waterLevel) * totalLayers);
-    int grassLayers = round((grassLevel - beachLevel) * totalLayers);
-    int mountainLayers = round((mountainLevel - grassLevel) * totalLayers);
-    int snowLayers = round((1.0 - mountainLevel) * totalLayers);
+    float totalColorLayers = 40; // Combined level layers
+    int waterLayers = round(waterLevel * totalColorLayers);
+    int beachLayers = round((beachLevel - waterLevel) * totalColorLayers);
+    int grassLayers = round((grassLevel - beachLevel) * totalColorLayers);
+    int mountainLayers = round((mountainLevel - grassLevel) * totalColorLayers);
+    int snowLayers = round((1.0 - mountainLevel) * totalColorLayers);
 
     // Maximum and minimum RGB colors for each level
     MapColor minWaterColor = {37, 89, 134};
@@ -103,6 +107,12 @@ struct MapConfig {
 
     MapColor minSnowColor = {223, 222, 216};
     MapColor maxSnowColor = {245, 244, 239};
+
+    // Constructor
+    MapConfig(int _mapWidth, int _mapHeight, float _seaLevel, float _riverDensity) : mapWidth(_mapWidth), mapHeight(_mapHeight), seaLevel(_seaLevel), riverDensity(_riverDensity) {}
+
+    // Constructor
+    MapConfig() {}
 };
 
 // Struct that stores map data

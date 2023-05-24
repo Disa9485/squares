@@ -461,9 +461,9 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, 
             auto& point = river.path[i];
 
             float t = std::min(1.0f, static_cast<float>(i) / mapConfig.maxRiverRadiusLength);  // normalize the current river point index
-            float currentRadius = mapConfig.startRadius + (mapConfig.maxRadius - mapConfig.startRadius) * std::pow(t, mapConfig.sizeScaleRate);  // interpolate the radius
+            float currentRadius = mapConfig.riverStartRadius + (mapConfig.riverMaxRadius - mapConfig.riverStartRadius) * std::pow(t, mapConfig.riverRadiusLengthScale);  // interpolate the radius
             int roundedRadius = static_cast<int>(std::round(currentRadius));
-            float currentTerrainCarveRadius = mapConfig.startTerrainCarveRadius + (mapConfig.maxTerrainCarveRadius - mapConfig.startTerrainCarveRadius) * std::pow(t, mapConfig.sizeTerrainCarveScaleRate);  // interpolate the terrain carving radius
+            float currentTerrainCarveRadius = mapConfig.terrainCarveStartRadius + (mapConfig.terrainCarveMaxRadius - mapConfig.terrainCarveStartRadius) * std::pow(t, mapConfig.terrainCarveLengthScale);  // interpolate the terrain carving radius
             int roundedTerrainCarveRadius = static_cast<int>(std::round(currentTerrainCarveRadius));
 
             // Terrain carving
@@ -486,7 +486,7 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, 
                         }
 
                         if (!insideRiver) {
-                            float distortion = (currentTerrainCarveRadius - distance) / (currentTerrainCarveRadius - currentRadius) * mapConfig.terrainDistortion;  // interpolate the terrain distortion
+                            float distortion = (currentTerrainCarveRadius - distance) / (currentTerrainCarveRadius - currentRadius) * mapConfig.terrainCarveDistortion;  // interpolate the terrain distortion
                             if (heightMap[y * mapConfig.mapWidth + x] > mapConfig.terrainMinDepth) {
                                 heightMap[y * mapConfig.mapWidth + x] = std::max(heightMap[y * mapConfig.mapWidth + x] - distortion, mapConfig.terrainMinDepth);  // subtract distortion and prevent it from going below riverMinDepth
                             }
@@ -526,10 +526,10 @@ void generateRiversInHeightMap(MapConfig mapConfig, std::vector<float>& heightMa
     std::cout << rivers.size() << std::endl;
 
     std::cout << "Finding river paths..." << std::endl;
-    createRiverPaths(rivers, heightMap, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverDespawnHeight, mapConfig.minSearchRiverPointDistance);
+    createRiverPaths(rivers, heightMap, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverDespawnHeight, mapConfig.circularSearchNextPathMinDistance);
 
     std::cout << "Adding randomness to river paths..." << std::endl;
-    generateRandomPoints(rivers, gen, mapConfig.randomPointSpacing, mapConfig.minDeviation, mapConfig.maxDeviation);
+    generateRandomPoints(rivers, gen, mapConfig.randomPointPlacementSpacing, mapConfig.minRandomPointDeviation, mapConfig.maxRandomPointDeviation);
 
     std::cout << "Redrawing river paths along B-spline curves..." << std::endl;
     redrawPaths(rivers);
@@ -538,10 +538,10 @@ void generateRiversInHeightMap(MapConfig mapConfig, std::vector<float>& heightMa
     removeLoopsAndDuplicates(rivers);
 
     std::cout << "Removing rivers that are too straight..." << std::endl;
-    removeStraightRivers(rivers, mapConfig.riverStraightnessThreshold);
+    removeStraightRivers(rivers, mapConfig.maxRiverStraightness);
 
     std::cout << "Combining rivers that intersect..." << std::endl;
-    combineIntersectingRivers(rivers, mapConfig.intersectionRange);
+    combineIntersectingRivers(rivers, mapConfig.riverIntersectionRange);
 
     std::cout << "Removing rivers that are too short..." << std::endl;
     checkRiverLength(rivers, mapConfig.minRiverLength);
@@ -1032,163 +1032,25 @@ bool saveColorAndHeightMaps(MapData mapData) {
     return true;
 }
 
-// Write map color to json
-void to_json(nlohmann::json& j, const MapColor& p) {
-    j = nlohmann::json{{"r", p.r}, {"g", p.g}, {"b", p.b}};
-}
-
-// Read map color from json
-void from_json(const nlohmann::json& j, MapColor& p) {
-    j.at("r").get_to(p.r);
-    j.at("g").get_to(p.g);
-    j.at("b").get_to(p.b);
-}
-
 // Write map config to json
 void to_json(nlohmann::json& j, const MapConfig& p) {
     j = nlohmann::json{
             {"mapWidth", p.mapWidth},
             {"mapHeight", p.mapHeight},
-            {"channels", p.channels},
             {"seaLevel", p.seaLevel},
-            {"frequency", p.frequency},
-            {"octaves", p.octaves},
-            {"lacunarity", p.lacunarity},
-            {"persistence", p.persistence},
-            {"distanceFromCenter", p.distanceFromCenter},
-            {"riverCount", p.riverCount},
-            {"maxRiverSpawnHeight", p.maxRiverSpawnHeight},
-            {"minRiverSpawnHeight", p.minRiverSpawnHeight},
-            {"minSearchRiverPointDistance", p.minSearchRiverPointDistance},
-            {"minRiverDespawnHeight", p.minRiverDespawnHeight},
-            {"randomPointSpacing", p.randomPointSpacing},
-            {"maxDeviation", p.maxDeviation},
-            {"minDeviation", p.minDeviation},
-            {"riverStraightnessThreshold", p.riverStraightnessThreshold},
-            {"minRiverLength", p.minRiverLength},
-            {"intersectionRange", p.intersectionRange},
-            {"startRadius", p.startRadius},
-            {"maxRadius", p.maxRadius},
-            {"sizeScaleRate", p.sizeScaleRate},
-            {"maxRiverRadiusLength", p.maxRiverRadiusLength},
-            {"riverMinDepth", p.riverMinDepth},
-            {"riverMaxDepth", p.riverMaxDepth},
-            {"terrainMinDepth", p.terrainMinDepth},
-            {"terrainDistortion", p.terrainDistortion},
-            {"startTerrainCarveRadius", p.startTerrainCarveRadius},
-            {"maxTerrainCarveRadius", p.maxTerrainCarveRadius},
-            {"sizeTerrainCarveScaleRate", p.sizeTerrainCarveScaleRate},
-            {"numDrops", p.numDrops},
-            {"minDropSpawnHeight", p.minDropSpawnHeight},
-            {"erosionRadius", p.erosionRadius},
-            {"inertia", p.inertia},
-            {"sedimentCapacityFactor", p.sedimentCapacityFactor},
-            {"minSedimentCapacity", p.minSedimentCapacity},
-            {"erodeSpeed", p.erodeSpeed},
-            {"depositSpeed", p.depositSpeed},
-            {"evaporateSpeed", p.evaporateSpeed},
-            {"gravity", p.gravity},
-            {"maxDropLifeTime", p.maxDropLifeTime},
-            {"minDropDespawnHeight", p.minDropDespawnHeight},
-            {"initialWaterVolume", p.initialWaterVolume},
-            {"minWaterVolume", p.minWaterVolume},
-            {"initialSpeed", p.initialSpeed},
-            {"waterLevel", p.waterLevel},
-            {"beachLevel", p.beachLevel},
-            {"grassLevel", p.grassLevel},
-            {"mountainLevel", p.mountainLevel},
-            {"totalLayers", p.totalLayers},
-            {"waterLayers", p.waterLayers},
-            {"beachLayers", p.beachLayers},
-            {"grassLayers", p.grassLayers},
-            {"mountainLayers", p.mountainLayers},
-            {"snowLayers", p.snowLayers},
-            {"minWaterColor", p.minWaterColor},
-            {"maxWaterColor", p.maxWaterColor},
-            {"minBeachColor", p.minBeachColor},
-            {"maxBeachColor", p.maxBeachColor},
-            {"minGrassColor", p.minGrassColor},
-            {"maxGrassColor", p.maxGrassColor},
-            {"minMountainColor", p.minMountainColor},
-            {"maxMountainColor", p.maxMountainColor},
-            {"minSnowColor", p.minSnowColor},
-            {"maxSnowColor", p.maxSnowColor}
+            {"riverDensity", p.riverDensity},
     };
 }
 
 // Read map config from json
 void from_json(const nlohmann::json& j, MapConfig& p) {
-    j.at("mapWidth").get_to(p.mapWidth);
-    j.at("mapHeight").get_to(p.mapHeight);
-    j.at("channels").get_to(p.channels);
-    j.at("seaLevel").get_to(p.seaLevel);
-
-    j.at("frequency").get_to(p.frequency);
-    j.at("octaves").get_to(p.octaves);
-    j.at("lacunarity").get_to(p.lacunarity);
-    j.at("persistence").get_to(p.persistence);
-    j.at("distanceFromCenter").get_to(p.distanceFromCenter);
-
-    j.at("riverCount").get_to(p.riverCount);
-    j.at("maxRiverSpawnHeight").get_to(p.maxRiverSpawnHeight);
-    j.at("minRiverSpawnHeight").get_to(p.minRiverSpawnHeight);
-    j.at("minSearchRiverPointDistance").get_to(p.minSearchRiverPointDistance);
-    j.at("minRiverDespawnHeight").get_to(p.minRiverDespawnHeight);
-    j.at("randomPointSpacing").get_to(p.randomPointSpacing);
-    j.at("maxDeviation").get_to(p.maxDeviation);
-    j.at("minDeviation").get_to(p.minDeviation);
-    j.at("riverStraightnessThreshold").get_to(p.riverStraightnessThreshold);
-    j.at("minRiverLength").get_to(p.minRiverLength);
-    j.at("intersectionRange").get_to(p.intersectionRange);
-    j.at("startRadius").get_to(p.startRadius);
-    j.at("maxRadius").get_to(p.maxRadius);
-    j.at("sizeScaleRate").get_to(p.sizeScaleRate);
-    j.at("maxRiverRadiusLength").get_to(p.maxRiverRadiusLength);
-    j.at("riverMinDepth").get_to(p.riverMinDepth);
-    j.at("riverMaxDepth").get_to(p.riverMaxDepth);
-    j.at("terrainMinDepth").get_to(p.terrainMinDepth);
-    j.at("terrainDistortion").get_to(p.terrainDistortion);
-    j.at("startTerrainCarveRadius").get_to(p.startTerrainCarveRadius);
-    j.at("maxTerrainCarveRadius").get_to(p.maxTerrainCarveRadius);
-    j.at("sizeTerrainCarveScaleRate").get_to(p.sizeTerrainCarveScaleRate);
-
-    j.at("numDrops").get_to(p.numDrops);
-    j.at("minDropSpawnHeight").get_to(p.minDropSpawnHeight);
-    j.at("erosionRadius").get_to(p.erosionRadius);
-    j.at("inertia").get_to(p.inertia);
-    j.at("sedimentCapacityFactor").get_to(p.sedimentCapacityFactor);
-    j.at("minSedimentCapacity").get_to(p.minSedimentCapacity);
-    j.at("erodeSpeed").get_to(p.erodeSpeed);
-    j.at("depositSpeed").get_to(p.depositSpeed);
-    j.at("evaporateSpeed").get_to(p.evaporateSpeed);
-    j.at("gravity").get_to(p.gravity);
-    j.at("maxDropLifeTime").get_to(p.maxDropLifeTime);
-    j.at("minDropDespawnHeight").get_to(p.minDropDespawnHeight);
-    j.at("initialWaterVolume").get_to(p.initialWaterVolume);
-    j.at("minWaterVolume").get_to(p.minWaterVolume);
-    j.at("initialSpeed").get_to(p.initialSpeed);
-
-    j.at("waterLevel").get_to(p.waterLevel);
-    j.at("beachLevel").get_to(p.beachLevel);
-    j.at("grassLevel").get_to(p.grassLevel);
-    j.at("mountainLevel").get_to(p.mountainLevel);
-    j.at("totalLayers").get_to(p.totalLayers);
-    j.at("waterLayers").get_to(p.waterLayers);
-    j.at("beachLayers").get_to(p.beachLayers);
-    j.at("grassLayers").get_to(p.grassLayers);
-    j.at("mountainLayers").get_to(p.mountainLayers);
-    j.at("snowLayers").get_to(p.snowLayers);
-
-    j.at("minWaterColor").get_to(p.minWaterColor);
-    j.at("maxWaterColor").get_to(p.maxWaterColor);
-    j.at("minBeachColor").get_to(p.minBeachColor);
-    j.at("maxBeachColor").get_to(p.maxBeachColor);
-    j.at("minGrassColor").get_to(p.minGrassColor);
-    j.at("maxGrassColor").get_to(p.maxGrassColor);
-    j.at("minMountainColor").get_to(p.minMountainColor);
-    j.at("maxMountainColor").get_to(p.maxMountainColor);
-    j.at("minSnowColor").get_to(p.minSnowColor);
-    j.at("maxSnowColor").get_to(p.maxSnowColor);
+    int mapWidth = DEFAULT_MAP_WIDTH, mapHeight = DEFAULT_MAP_HEIGHT;
+    float seaLevel = DEFAULT_SEA_LEVEL, riverDensity = DEFAULT_RIVER_DENSITY;
+    if (j.contains("mapWidth") && j["mapWidth"].is_number() && j["mapWidth"] != -1) mapWidth = j.at("mapWidth");
+    if (j.contains("mapHeight") && j["mapHeight"].is_number() && j["mapHeight"] != -1) mapHeight = j.at("mapHeight");
+    if (j.contains("seaLevel") && j["seaLevel"].is_number() && j["seaLevel"] != -1) seaLevel = j.at("seaLevel");
+    if (j.contains("riverDensity") && j["riverDensity"].is_number() && j["riverDensity"] != -1) riverDensity = j.at("riverDensity");
+    p = MapConfig(mapWidth, mapHeight, seaLevel, riverDensity);
 }
 
 // Load map config
