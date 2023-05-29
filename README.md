@@ -13,7 +13,7 @@ The libraries that aren't included should be downloaded and put into the libs di
 ## Map Generation
 Currently, the only feature in squares.
 * Color Map Example:
-![Color Map](map_gen_examples/color_map0.png)
+![Color Map](map_gen_examples/color_map4.png)
 
 * Height Map Example:
-![Height Map](map_gen_examples/grayscale_map0.png)
+![Height Map](map_gen_examples/grayscale_map4.png)

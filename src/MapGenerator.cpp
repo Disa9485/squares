@@ -22,6 +22,197 @@
 ////  GENERATE PERLIN NOISE HEIGHTMAP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct Point {
+    int x, y;
+    int radius;
+};
+
+float calculateDistance(const Point& p1, const Point& p2) {
+    float dx = p2.x - p1.x;
+    float dy = p2.y - p1.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+std::vector<Point> generateCluster(Point origin, int mapWidth, int mapHeight, int edgeClearance, int numClusterPoints, float clusterDensityRadius) {
+    std::vector<Point> points;
+
+    // Add origin to cluster
+    points.push_back(origin);
+
+    // Loop until all points are placed
+    for (int i = 0; i < numClusterPoints; ++i) {
+        Point newPoint;
+
+        // Loop until valid point location is found
+        while (true) {
+            newPoint.x = edgeClearance + rand() % (mapWidth - 2 * edgeClearance);
+            newPoint.y = edgeClearance + rand() % (mapHeight - 2 * edgeClearance);
+
+            // Check if new point is within radius of another point
+            bool withinClusterRadius = false;
+            for (const auto& point : points) {
+                if (calculateDistance(point, newPoint) <= clusterDensityRadius) {
+                    withinClusterRadius = true;
+                    break;
+                }
+            }
+
+            if (withinClusterRadius) {
+                points.push_back(newPoint);
+                break;
+            }
+        }
+    }
+
+    std::cout << "Generating cluster with " << points.size() << " points." << std::endl;
+    return points;
+}
+
+std::vector<Point> generateClusters(MapConfig mapConfig) {
+    std::vector<Point> points;
+
+    // Calculate the number of cells per row and per column
+    int numCellsPerRow = ceil(sqrt(mapConfig.numClusters));
+    int numCellsPerColumn = ceil((double)mapConfig.numClusters / numCellsPerRow);
+
+    // Calculate cell dimensions
+    int cellWidth = mapConfig.mapWidth / numCellsPerRow;
+    int cellHeight = mapConfig.mapHeight / numCellsPerColumn;
+
+    // Generate clusters
+    for (int i = 0; i < mapConfig.numClusters; i++) {
+        // Calculate the cell in which to place this cluster
+        int cellX = i % numCellsPerRow;
+        int cellY = i / numCellsPerRow;
+
+        // Generate a random origin within this cell, ensuring it stays within the edge clearance
+        Point origin;
+        origin.x = cellX * cellWidth + (int)(mapConfig.edgeClearance * 1.5) + rand() % (cellWidth - 2 * (int)(mapConfig.edgeClearance * 1.5));
+        origin.y = cellY * cellHeight + (int)(mapConfig.edgeClearance * 1.5) + rand() % (cellHeight - 2 * (int)(mapConfig.edgeClearance * 1.5));
+
+        int clusterPoints = mapConfig.clusterMinPoints + rand() % (mapConfig.clusterMaxPoints - mapConfig.clusterMinPoints + 1);
+        std::vector<Point> cluster = generateCluster(origin, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.edgeClearance, clusterPoints, mapConfig.clusterDensityRadius);
+        points.insert(points.end(), cluster.begin(), cluster.end());
+    }
+
+    // Assign radius to points
+    for (int i = 0; i < points.size(); i++) {
+        points[i].radius = mapConfig.pointRadius;
+    }
+    std::cout << points.size() << " points generated." << std::endl;
+    return points;
+}
+
+// This function will find two points within the mapWidth and mapHeight and atleast the edgeClearance away from the edge and with a circumference and radius it will
+// Create an abstract curve shaped line. Along this line it should generate random points that are within the deviation away from the curved line. It should generate as many points as
+// specified with numCurvePoints
+#define M_PI 3.14159265358979323846
+std::vector<Point> generateCurve(Point origin, int axisX, int axisY, int numCurvePoints, float deviation, float minAngleDiff, float maxAngleDiff) {
+    std::vector<Point> points;
+
+    // Select two random angles with the specified angle difference
+    float angle1 = static_cast<float>(rand()) / (static_cast<float>(RAND_MAX/(2 * M_PI)));
+    float angleDiff = (minAngleDiff * M_PI / 180.0f) + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX/((maxAngleDiff - minAngleDiff) * M_PI / 180.0f)));
+    float angle2 = fmod(angle1 + angleDiff, 2 * M_PI); // Modulo operation to keep angle2 within [0, 2PI]
+
+    // Ensure angle2 > angle1 to avoid full ellipse
+    if (angle2 < angle1) {
+        std::swap(angle1, angle2);
+    }
+
+    // Generate the points along the circumference of the ellipse
+    float angleStep = (angle2 - angle1) / numCurvePoints;
+    for (int i = 0; i < numCurvePoints; ++i) {
+        Point newPoint;
+        float angle = angle1 + i * angleStep;
+        newPoint.x = origin.x + axisX * cos(angle) + (deviation * (2.0 * rand() / RAND_MAX - 1));
+        newPoint.y = origin.y + axisY * sin(angle) + (deviation * (2.0 * rand() / RAND_MAX - 1));
+        points.push_back(newPoint);
+    }
+    std::cout << "Generating curve with " << points.size() << " points." << std::endl;
+    return points;
+}
+
+std::vector<Point> generateCurves(MapConfig mapConfig, std::vector<float>& heightMap) {
+    std::vector<Point> points;
+    std::vector<Point> potentialOrigins;
+
+    // Generate potential origins that are above sea level
+    for (int y = 0; y < mapConfig.mapHeight; ++y) {
+        for (int x = 0; x < mapConfig.mapWidth; ++x) {
+            if (heightMap[y * mapConfig.mapWidth + x] >= mapConfig.seaLevel) {
+                potentialOrigins.push_back({x, y});
+            }
+        }
+    }
+
+    // Shuffle the potential origins to ensure a random distribution
+    std::random_shuffle(potentialOrigins.begin(), potentialOrigins.end());
+
+    // Generate curves
+    for (int i = 0; i < mapConfig.numCurves && i < potentialOrigins.size(); i++) {
+        Point origin = potentialOrigins[i];
+        int axisX;
+        int axisY;
+        while(true) {
+            // Compute the center of the ellipse, ensuring it and its axis's stay within the map dimensions and on land
+            int originX = rand() % mapConfig.mapWidth;
+            int originY = rand() % mapConfig.mapHeight;
+            if (heightMap[originY * mapConfig.mapWidth + originX] >= mapConfig.seaLevel) {
+                // Attempt to generate the axis lengths
+                int maxAxisX = std::min(std::min(originX, mapConfig.mapWidth - originX), mapConfig.maxAxis);
+                int maxAxisY = std::min(std::min(originY, mapConfig.mapHeight - originY), mapConfig.maxAxis);
+
+                // Check if min axis length can be respected
+                if (maxAxisX < mapConfig.minAxis || maxAxisY < mapConfig.minAxis) {
+                    continue;
+                }
+
+                axisX = mapConfig.minAxis + rand() % (maxAxisX - mapConfig.minAxis + 1);
+                axisY = mapConfig.minAxis + rand() % (maxAxisY - mapConfig.minAxis + 1);
+
+                // Check if ellipse would be entirely above sea level
+                bool valid = true;
+                for (int dx = -axisX; dx <= axisX; dx++) {
+                    for (int dy = -axisY; dy <= axisY; dy++) {
+                        if ((dx*dx)/(axisX*axisX) + (dy*dy)/(axisY*axisY) <= 1) { // If point lies within the ellipse
+                            int x = originX + dx;
+                            int y = originY + dy;
+                            if (heightMap[y * mapConfig.mapWidth + x] < mapConfig.seaLevel) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (!valid) {
+                        break;
+                    }
+                }
+
+                if (valid) {
+                    origin.x = originX;
+                    origin.y = originY;
+                    break;
+                }
+            }
+        }
+
+        // Generate a points based on a curve with a given origin and axis's for an ellipse
+        int curvePoints = mapConfig.curveMinPoints + rand() % (mapConfig.curveMaxPoints - mapConfig.curveMinPoints + 1);
+        std::vector<Point> curve = generateCurve(origin, axisX, axisY, curvePoints, mapConfig.curveDeviation, mapConfig.curveMinAngle, mapConfig.curveMaxAngle);
+        points.insert(points.end(), curve.begin(), curve.end());
+    }
+
+    // Assign radius to points
+    for (int i = 0; i < points.size(); i++) {
+        points[i].radius = mapConfig.mountainPointRadius;
+    }
+
+    std::cout << points.size() << " points generated." << std::endl;
+    return points;
+}
+
+
 // Generate noise heightmap function
 std::vector<float> generateNoiseHeightMap(MapConfig mapConfig) {
     // Create height map
@@ -35,13 +226,11 @@ std::vector<float> generateNoiseHeightMap(MapConfig mapConfig) {
     // Generate a random seed
     int seed = rand();
 
+    std::vector<Point> points = generateClusters(mapConfig);
+
     // Get threads
     unsigned int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads(numThreads);
-
-    // Calculate center of the image
-    float centerX = mapConfig.mapWidth / 2.0f;
-    float centerY = mapConfig.mapHeight / 2.0f;
 
     // Initialize Simplex noise generator
     FastNoiseLite noiseGenerator;
@@ -67,16 +256,31 @@ std::vector<float> generateNoiseHeightMap(MapConfig mapConfig) {
                 noise /= maxAmplitude;
                 noise = (noise + 1) / 2.0f;  // map noise from 0.0 - 1.0
 
-                float dx = 2.0f * (centerX - x) / mapConfig.mapWidth;  // Scale the x-distance by map width
-                float dy = 2.0f * (centerY - y) / mapConfig.mapHeight;  // Scale the y-distance by map height
-                float distance = std::sqrt(dx * dx + dy * dy);
-                distance = 1 / (1 + std::exp(-10 * (distance - mapConfig.distanceFromCenter)));
-                noise = (1 - distance) * noise;
+                // Iterate through every point in points vector
+                Point currentPixel{x, y};
+                Point closestPoint;
+                float closestDistance = std::numeric_limits<float>::max();
+                float scalingFactor = mapConfig.baseScalingFactor;
+                for (const auto& point : points) {
+
+                    // Check if this is the closest point so far
+                    float distance = calculateDistance(currentPixel, point);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestPoint = point;
+                    }
+                }
+                if (closestDistance <= closestPoint.radius) {
+                    float distanceRatio = closestDistance / closestPoint.radius;
+                    scalingFactor = mapConfig.maxScalingFactor - pow(distanceRatio, mapConfig.steepness) * (mapConfig.maxScalingFactor - scalingFactor);
+                }
+                noise *= scalingFactor;
+                if (noise > mapConfig.maxPointHeight) noise = mapConfig.maxPointHeight;
                 heightMap[y * mapConfig.mapWidth + x] = noise;
 
                 // Print progress
                 pixelsProcessed++;
-                if ((pixelsProcessed % ((mapConfig.mapWidth * mapConfig.mapHeight) / 10)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
+                if ((pixelsProcessed % ((mapConfig.mapWidth * mapConfig.mapHeight) / 20)) == 0) {  // Update every 1000 pixels to avoid slowing down the computation
                     float progress = (float)pixelsProcessed / (mapConfig.mapWidth * mapConfig.mapHeight);
                     std::cout << "\rMap Generation Progress: " << progress * 100 << "%" << std::endl;
                 }
@@ -102,6 +306,34 @@ std::vector<float> generateNoiseHeightMap(MapConfig mapConfig) {
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Map Generation Complete: " << elapsed.count() << "s Elapsed, " << pixelsProcessed << " Pixels Processed" << std::endl;
 
+    // Generate mountains
+    std::vector<Point> mountainPoints = generateCurves(mapConfig, heightMap);
+    for (int y = 0; y < mapConfig.mapHeight; ++y) {
+        for (int x = 0; x < mapConfig.mapWidth; ++x) {
+            float currentNoise = heightMap[y * mapConfig.mapWidth + x];
+            Point currentPixel{x, y};
+            Point closestPoint;
+            float closestDistance = std::numeric_limits<float>::max();
+            float scalingFactor = mapConfig.baseMountainScalingFactor;
+            for (const auto& mountainPoint : mountainPoints) {
+
+                // Check if this is the closest point so far
+                float distance = calculateDistance(currentPixel, mountainPoint);
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPoint = mountainPoint;
+                }
+            }
+            if (closestDistance <= closestPoint.radius) {
+                float distanceRatio = closestDistance / closestPoint.radius;
+                scalingFactor = mapConfig.maxMountainScalingFactor - pow(distanceRatio, mapConfig.mountainSteepness) * (mapConfig.maxMountainScalingFactor - scalingFactor);
+            }
+            currentNoise *= scalingFactor;
+            if (currentNoise > mapConfig.maxMountainPointHeight) currentNoise = mapConfig.maxMountainPointHeight;
+            heightMap[y * mapConfig.mapWidth + x] = currentNoise;
+        }
+    }
+
     // Return created map
     return heightMap;
 }
@@ -119,12 +351,12 @@ struct RiverPath {
 void initializeRivers(std::vector<RiverPath>& rivers,
                       std::vector<float>& heightMap,
                       std::mt19937& gen,
-                      std::uniform_int_distribution<>& distr,
                       int mapWidth,
                       int mapHeight,
                       float minRiverSpawnHeight,
                       float maxRiverSpawnHeight) {
 
+    std::uniform_int_distribution<> distr(0, mapWidth * mapHeight - 1);
     for (auto& river : rivers) {
         int index;
         do {
@@ -337,66 +569,44 @@ void redrawPaths(std::vector<RiverPath>& rivers) {
     }
 }
 
-// Pair hash struct
-struct pair_hash {
-    inline std::size_t operator()(const std::pair<int, int> & v) const {
-        return v.first * 31 + v.second;
-    }
-};
-
 // Remove loops and duplicate points along river path
-void removeLoopsAndDuplicates(std::vector<RiverPath>& rivers) {
+void removeLoops(std::vector<RiverPath>& rivers, int loopClearanceWindow, int loopIntersectionRange) {
     // Check for self intersections and duplicate points
+    int riverIndex = 0;
     for (auto& river : rivers) {
-        std::unordered_map<std::pair<int, int>, int, pair_hash> pointIndices;
 
+        // Iterate through all river path points
         for (int i = 0; i < river.path.size(); ++i) {
-            if (pointIndices.count(river.path[i]) > 0) {
-                // Intersection found: keep only the intersection point
-                if (i - pointIndices[river.path[i]] > 1) {
-                    river.path.erase(river.path.begin() + pointIndices[river.path[i]] + 1, river.path.begin() + i);
+
+            // If window is less than river path size go through all points from window to end of path and try to find intersections with itself
+            if (i + loopClearanceWindow < river.path.size()) {
+                for (int j = i + loopClearanceWindow; j < river.path.size(); ++j) {
+
+                    // If an intersection is found erase all points between i (current point) and j (intersecting point)
+                    if (getDistance(river.path[i], river.path[j]) < loopIntersectionRange) {
+                        // Save the points before erasing
+                        auto start = river.path[i];
+                        auto end = river.path[j];
+
+                        // Erase all points between i and j
+                        river.path.erase(river.path.begin() + i + 1, river.path.begin() + j);
+
+                        // Recreate the points using Bresenham's line algorithm
+                        std::vector<std::pair<int, int>> line;
+                        BresenhamLine(start.first, start.second, end.first, end.second, line);
+                        river.path.insert(river.path.begin() + i + 1, line.begin(), line.end());
+                    }
                 }
             }
-            pointIndices[river.path[i]] = i;
+        }
+
+        // Update rivers computed
+        riverIndex++;
+        if ((riverIndex % ((rivers.size()) / 5)) == 0) {
+            float progress = (float)riverIndex / rivers.size();
+            std::cout << "\rFinding River Loops Progress: " << progress * 100 << "%" << std::endl;
         }
     }
-}
-
-// Remove rivers that are considered too straight
-void removeStraightRivers(std::vector<RiverPath>& rivers, int riverStraightnessThreshold) {
-    std::vector<RiverPath> filteredRivers;
-    for (const auto& river : rivers) {
-        // Initialize direction with a large number for the first comparison
-        std::pair<int, int> lastDirection{INT_MAX, INT_MAX};
-
-        int straightCount = 0;
-
-        for (size_t i = 1; i < river.path.size(); ++i) {
-            // Calculate direction from current point to previous point
-            std::pair<int, int> currentDirection{
-                    river.path[i].first - river.path[i - 1].first,
-                    river.path[i].second - river.path[i - 1].second};
-
-            // If the current direction is the same as the last one, increment the counter
-            if (currentDirection == lastDirection) {
-                ++straightCount;
-                // If the counter exceeds the threshold, this river is too straight
-                if (straightCount >= riverStraightnessThreshold) {
-                    break;
-                }
-            } else {
-                // If the current direction is different, reset the counter and update lastDirection
-                straightCount = 1;
-                lastDirection = currentDirection;
-            }
-        }
-
-        // If straightCount is below the threshold, the river is not too straight
-        if (straightCount < riverStraightnessThreshold) {
-            filteredRivers.push_back(river);
-        }
-    }
-    rivers = std::move(filteredRivers);
 }
 
 // Combine rivers which intersect
@@ -405,6 +615,11 @@ void combineIntersectingRivers(std::vector<RiverPath>& rivers, int intersectionR
         for (size_t j = i + 1; j < rivers.size(); ++j) {
             auto& river1 = rivers[i];
             auto& river2 = rivers[j];
+
+            // Skip the check if the rivers are too far apart
+//            if (getDistance(river1.path.front(), river2.path.front()) > river1.path.size() + river2.path.size()) {
+//                continue;
+//            }
 
             bool intersectionFound = false;
             int intersectionIndexRiver1;
@@ -421,36 +636,41 @@ void combineIntersectingRivers(std::vector<RiverPath>& rivers, int intersectionR
                     }
                 }
                 if (intersectionFound) {
+                    // Decide which river to truncate based on their lengths
+                    auto& longerRiver = river1.path.size() > river2.path.size() ? river1 : river2;
+                    auto& shorterRiver = river1.path.size() <= river2.path.size() ? river1 : river2;
+                    int intersectionIndexLonger = river1.path.size() > river2.path.size() ? intersectionIndexRiver1 : intersectionIndexRiver2;
+                    int intersectionIndexShorter = river1.path.size() <= river2.path.size() ? intersectionIndexRiver1 : intersectionIndexRiver2;
+
                     // Create a new vector for the intersecting river
                     std::vector<std::pair<int, int>> newPath;
 
                     // Add points before the intersection
-                    newPath.insert(newPath.end(), river2.path.begin(), river2.path.begin() + intersectionIndexRiver2);
+                    newPath.insert(newPath.end(), shorterRiver.path.begin(), shorterRiver.path.begin() + intersectionIndexShorter);
 
-                    // Draw line from river2's intersection point to 10 points further down river1
-                    int nextPointIndex = std::min(intersectionIndexRiver1 + 10, (int) river1.path.size() - 1);
+                    // Draw line from shorterRiver's intersection point to 10 points further down longerRiver
+                    int nextPointIndex = std::min(intersectionIndexLonger + 10, (int) longerRiver.path.size() - 1);
                     std::vector<std::pair<int, int>> line;
-                    BresenhamLine(river2.path[intersectionIndexRiver2].first, river2.path[intersectionIndexRiver2].second,
-                                  river1.path[nextPointIndex].first, river1.path[nextPointIndex].second, line);
+                    BresenhamLine(shorterRiver.path[intersectionIndexShorter].first, shorterRiver.path[intersectionIndexShorter].second,
+                                  longerRiver.path[nextPointIndex].first, longerRiver.path[nextPointIndex].second, line);
 
                     // Add points from the line to the intersecting river
                     newPath.insert(newPath.end(), line.begin(), line.end());
 
-                    // Replace the path of river2 with the new path
-                    river2.path = newPath;
+                    // Replace the path of shorterRiver with the new path
+                    shorterRiver.path = newPath;
 
                     break;
                 }
             }
         }
-    }
-}
 
-// Remove rivers which are considered too short
-void checkRiverLength(std::vector<RiverPath>& rivers, int minRiverLength) {
-    rivers.erase(std::remove_if(rivers.begin(), rivers.end(), [&](const RiverPath& river){
-        return river.path.size() < minRiverLength;
-    }), rivers.end());
+        // Update rivers computed
+        if ((i + 1 % ((rivers.size()) / 20)) == 0) {
+            float progress = (float)i / rivers.size();
+            std::cout << "\rCombining Rivers Progress: " << progress * 100 << "%" << std::endl;
+        }
+    }
 }
 
 // Carve rivers into the heightmap
@@ -462,9 +682,9 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, 
 
             float t = std::min(1.0f, static_cast<float>(i) / mapConfig.maxRiverRadiusLength);  // normalize the current river point index
             float currentRadius = mapConfig.riverStartRadius + (mapConfig.riverMaxRadius - mapConfig.riverStartRadius) * std::pow(t, mapConfig.riverRadiusLengthScale);  // interpolate the radius
-            int roundedRadius = static_cast<int>(std::round(currentRadius));
+            int roundedRadius = static_cast<int>(std::ceil(currentRadius));
             float currentTerrainCarveRadius = mapConfig.terrainCarveStartRadius + (mapConfig.terrainCarveMaxRadius - mapConfig.terrainCarveStartRadius) * std::pow(t, mapConfig.terrainCarveLengthScale);  // interpolate the terrain carving radius
-            int roundedTerrainCarveRadius = static_cast<int>(std::round(currentTerrainCarveRadius));
+            int roundedTerrainCarveRadius = static_cast<int>(std::ceil(currentTerrainCarveRadius));
 
             // Terrain carving
             for (int x = std::max(0, point.first - roundedTerrainCarveRadius); x < std::min(mapConfig.mapWidth, point.first + roundedTerrainCarveRadius); x++) {
@@ -516,13 +736,13 @@ void carveRivers(std::vector<RiverPath>& rivers, std::vector<float>& heightMap, 
 }
 
 // Generate rivers in heightmap function
+// TODO: Make these faster..
 void generateRiversInHeightMap(MapConfig mapConfig, std::vector<float>& heightMap) {
     std::cout << "Initializing Rivers..." << std::endl;
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(0, mapConfig.mapWidth * mapConfig.mapHeight - 1);
     std::vector<RiverPath> rivers(mapConfig.riverCount);
-    initializeRivers(rivers, heightMap, gen, distr, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverSpawnHeight, mapConfig.maxRiverSpawnHeight);
+    initializeRivers(rivers, heightMap, gen, mapConfig.mapWidth, mapConfig.mapHeight, mapConfig.minRiverSpawnHeight, mapConfig.maxRiverSpawnHeight);
     std::cout << rivers.size() << std::endl;
 
     std::cout << "Finding river paths..." << std::endl;
@@ -535,16 +755,10 @@ void generateRiversInHeightMap(MapConfig mapConfig, std::vector<float>& heightMa
     redrawPaths(rivers);
 
     std::cout << "Removing loops and duplicate points in river paths..." << std::endl;
-    removeLoopsAndDuplicates(rivers);
-
-    std::cout << "Removing rivers that are too straight..." << std::endl;
-    removeStraightRivers(rivers, mapConfig.maxRiverStraightness);
+    removeLoops(rivers, mapConfig.loopClearanceWindow, mapConfig.loopIntersectionRange);
 
     std::cout << "Combining rivers that intersect..." << std::endl;
     combineIntersectingRivers(rivers, mapConfig.riverIntersectionRange);
-
-    std::cout << "Removing rivers that are too short..." << std::endl;
-    checkRiverLength(rivers, mapConfig.minRiverLength);
 
     std::cout << "Placing rivers in heightmap..." << std::endl;
     carveRivers(rivers, heightMap, mapConfig);
@@ -980,7 +1194,7 @@ MapData generate(MapConfig mapConfig) {
     MapData mapData;
 
     // Set random number seed
-    srand(static_cast<unsigned int>(std::time(0)));
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     // Create height map
     std::vector<float> heightMap = generateNoiseHeightMap(mapConfig);
@@ -1019,8 +1233,6 @@ MapData generate(MapConfig mapConfig) {
 
 // Save maps function
 bool saveColorAndHeightMaps(MapData mapData) {
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
-
     // Write the map data images to file
     if (!stbi_write_png("map_gen_output\\color_map.png", mapData.mapConfig.mapWidth, mapData.mapConfig.mapHeight, mapData.mapConfig.channels, mapData.colorMap.data(), mapData.mapConfig.mapWidth * mapData.mapConfig.channels)
     || !stbi_write_png("map_gen_output\\grayscale_map.png", mapData.mapConfig.mapWidth, mapData.mapConfig.mapHeight, mapData.mapConfig.channels, mapData.grayscaleMap.data(), mapData.mapConfig.mapWidth * mapData.mapConfig.channels)) {

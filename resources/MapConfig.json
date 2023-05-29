@@ -1,6 +1,6 @@
 {
-    "mapWidth": 2000,
-    "mapHeight": 1000,
-    "seaLevel": 0.35,
+    "mapWidth": 7000,
+    "mapHeight": 3500,
+    "seaLevel": 0.4,
     "riverDensity": 0.00005
 }
